@@ -4,10 +4,10 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
-import { CreateUserDto } from './dtos/request/create-user.dto';
-import { UpdateUserDto } from './dtos/request/update-user.dto';
+import { UserCreateRequestDto } from './dtos/request/user-create-request.dto';
+import { UserUpdateRequestDto } from './dtos/request/user-update-request.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+  async create(createUserDto: UserCreateRequestDto): Promise<UserEntity> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -50,7 +50,7 @@ export class UserService {
     });
   }
 
-  async findOne(id: number): Promise<UserEntity> {
+  async findOneById(id: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({
       where: { id },
       select: [
@@ -71,16 +71,16 @@ export class UserService {
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
-    const user = await this.findOne(id);
+  async update(id: string, data: DeepPartial<UserEntity>): Promise<UserEntity> {
+    const user = await this.findOneById(id);
 
-    if (updateUserDto.password) {
-      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
     }
 
-    if (updateUserDto.email && updateUserDto.email !== user.email) {
+    if (data.email && data.email !== user.email) {
       const existingUser = await this.userRepository.findOne({
-        where: { email: updateUserDto.email },
+        where: { email: data.email },
       });
 
       if (existingUser) {
@@ -88,27 +88,15 @@ export class UserService {
       }
     }
 
-    await this.userRepository.update(id, updateUserDto);
-    return this.findOne(id);
+    await this.userRepository.update(id, data);
+    return this.findOneById(id);
   }
 
-  async remove(id: number): Promise<boolean> {
+  async remove(id: string): Promise<boolean> {
     const result = await this.userRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
     return true;
-  }
-
-  async findByUserId(userId: string): Promise<UserEntity> {
-    const user = await this.userRepository.findOne({
-      where: { userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    return user;
   }
 }

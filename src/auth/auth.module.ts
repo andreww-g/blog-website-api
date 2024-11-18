@@ -2,32 +2,24 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
-import { CharactersModule } from '../characters/characters.module';
+import { AuthorModule } from '../author/author.module';
 import { ConfigService } from '../config/config.service';
-
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtCharacterStrategy } from './strategies/jwt-character.strategy';
-import { LocalAdminStrategy } from './strategies/local-character.strategy';
-
+import { JwtAuthorStrategy } from './strategies/jwt-author.strategy';
+import { LocalAuthorStrategy } from './strategies/local-author.strategy';
 
 @Module({
   imports: [
-    CharactersModule,
+    AuthorModule,
     PassportModule,
     JwtModule.register({
-      secret: (new ConfigService()).jwtParams.secret,
+      secret: new ConfigService().getJwtConfig.secret,
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtCharacterStrategy,
-    LocalAdminStrategy,
-  ],
-  exports: [
-    AuthService,
-  ],
+  providers: [AuthService, JwtAuthorStrategy, LocalAuthorStrategy],
+  exports: [AuthService],
 })
 export class AuthModule {}

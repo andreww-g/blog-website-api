@@ -1,139 +1,88 @@
+import { faker } from '@faker-js/faker/locale/ar';
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ArticleEntity } from '../../article/entities/article.entity';
+import { ArticleCategoryEntity } from '../../article-category/entities/article-category.entity';
+import { AuthorContactInfoEntity } from '../../author/entities/author-contact-info.entity';
+import { AuthorEntity } from '../../author/entities/author.entity';
+import { PublisherEntity } from '../../publisher/entities/publisher.entity';
+import { UserEntity } from '../../user/entities/user.entity';
+import { articleCategories } from './data/article-categories';
+import { articles } from './data/articles';
+import { authors } from './data/authors';
+import { publishers } from './data/publishers';
+import { users } from './data/users';
 
 @Injectable()
 export class SeedPostgresService {
-  constructor() {}
-  /* constructor (
-    @InjectRepository(CountryEntity) private readonly countriesRepository:Repository<CountryEntity>,
-    @InjectRepository(CityEntity) private readonly citiesRepository: Repository<CityEntity>,
-    @InjectRepository(AirportEntity) private readonly airportsRepository: Repository<AirportEntity>,
-    @InjectRepository(AirportContactsEntity) private readonly airportContactsRepository: Repository<AirportContactsEntity>,
-    @InjectRepository(ServiceEntity) private readonly servicesRepository: Repository<ServiceEntity>,
-    @InjectRepository(AdminEntity) private readonly adminsRepository: Repository<AdminEntity>,
-    @InjectRepository(ArticleEntity) private readonly articleRepository: Repository<ArticleEntity>,
-    @InjectRepository(PopularLocationEntity) private readonly popularLocationEntity: Repository<PopularLocationEntity>,
+  constructor (
+    @InjectRepository(UserEntity) private readonly userEntityRepository: Repository<UserEntity>,
+    @InjectRepository(PublisherEntity) private readonly publisherEntityRepository: Repository<PublisherEntity>,
+    @InjectRepository(AuthorEntity) private readonly authorEntityRepository: Repository<AuthorEntity>,
+    @InjectRepository(ArticleEntity) private readonly articleEntityRepository: Repository<ArticleEntity>,
+    @InjectRepository(ArticleCategoryEntity) private readonly articleCategoryEntityRepository: Repository<ArticleCategoryEntity>,
+    @InjectRepository(AuthorContactInfoEntity) private readonly authorContactInfoEntityRepository: Repository<AuthorContactInfoEntity>,
   ) {}
 
   async refreshDB () {
-    await this.seedAdmins();
-    await this.seedAirport();
-    await this.seedServices();
-    await this.seedArticles();
-    await this.seedPopularLocations();
+    await this.clearTables();
+
+    await this.seedUsers();
+    await this.seedAuthorsWithRelations();
+    await this.seedArticleCategories();
+    await this.seedPublishersWithRelations();
+    await this.seedArticlesWithRelations();
   }
 
-  private async seedAirport () {
-    await this.countriesRepository.insert(
-      countries.map((countryData) => ({
-        name: countryData.name,
-        shortCode: countryData.shortCode,
-      })),
-    );
-
-    const newCountries = await this.countriesRepository.find();
-
-    await this.citiesRepository.insert(
-      cities.map((cityData) => {
-        const country = newCountries.find((c) => c.shortCode === cityData._meta.countryShortCode);
-
-        if (!country) {
-          throw new Error(`Country with shortCode ${cityData._meta.countryShortCode} not found`);
-        }
-
-        return {
-          name: cityData.name,
-          shortCode: cityData.shortCode,
-          countryId: country.id,
-        };
-      }).filter(Boolean),
-    );
-
-    const newCities = await this.citiesRepository.find();
-
-    const airportData: Partial<AirportEntity>[] = await Promise.all(airports.map(async (airportData) => {
-      const city = newCities.find((c) => c.shortCode === airportData._meta.cityShortCode);
-
-      if (!city) {
-        throw new Error(`City with shortCode ${airportData._meta.cityShortCode} not found`);
-      }
-
-      const airportServices = services.filter((service) => service.airportIATA === airportData.airportIATA);
-      const hasFilledServices = airportServices.some((service) => service.isFilled);
-
-      if (!city.country?.shortCode) {
-        throw new Error(`City with shortCode ${airportData._meta.cityShortCode} has no country`);
-      }
-
-      const { identifiers: [{ id: contactsId }] } = await this.airportContactsRepository.insert({
-        ...pick(airportData, [
-          'phone',
-          'website',
-          'facebook',
-          'twitter',
-          'instagram',
-        ]),
-      });
-
-      return {
-        ...pick(airportData, [
-          'name',
-          'airportIATA',
-          'posterImageUrl',
-          'previewImageUrl',
-          'slug',
-          'lat',
-          'lon',
-          'childAgeCutoff',
-          'timezone',
-        ]),
-        contactsId,
-        priceFrom: this.calculateAirportPriceFrom(airportServices),
-        cityId: city.id,
-        hiddenAt: hasFilledServices ? null : new Date(),
-        fees: [],
-      } as Partial<AirportEntity>;
-    }).filter(Boolean));
-
-    await this.airportsRepository.insert(airportData);
+  private async clearTables () {
+    await this.articleEntityRepository.delete({});
+    await this.publisherEntityRepository.delete({});
+    await this.authorContactInfoEntityRepository.delete({});
+    await this.authorEntityRepository.delete({});
+    await this.articleCategoryEntityRepository.delete({});
+    await this.userEntityRepository.delete({});
   }
 
-  private async seedServices () {
-    await this.servicesRepository.insert(services.map((service) => ({
-      ...service,
-      priceFrom: ServicePriceFromService.calculateServicePriceFrom(service),
-    })));
+  private async seedUsers () {
+    await this.userEntityRepository.insert(users);
   }
 
-  private async seedAdmins () {
-    await this.adminsRepository.insert(admins);
+  private async seedAuthorsWithRelations () {
+    const createdAuthors = await this.authorEntityRepository.save(authors);
+
+    for (const author of createdAuthors) {
+      const contactInfo = {
+        id: faker.string.uuid(),
+        instagram: faker.internet.url(),
+        facebook: faker.internet.url(),
+        telegram: faker.internet.url(),
+        author: author,
+      };
+
+      await this.authorContactInfoEntityRepository.save(contactInfo);
+    }
   }
 
-  private async seedArticles () {
-    await this.articleRepository.insert(articles);
+  private async seedPublishersWithRelations () {
+    const publishersWithoutArticles = publishers.map((pub) => ({
+      id: pub.id,
+      authorId: pub.authorId,
+    }));
+
+    await this.publisherEntityRepository.insert(publishersWithoutArticles);
   }
 
-  private async seedPopularLocations () {
-    const airports = await this.airportsRepository.find({ skip: Math.floor(Math.random() * 100), take: 20 });
-
-    await this.popularLocationEntity.insert(
-      popularLocations.map((location) => {
-        return {
-          ...location,
-          airportId: airports[Math.floor(Math.random() * airports.length)].id,
-        };
-      }),
-    );
+  private async seedArticleCategories () {
+    await this.articleCategoryEntityRepository.insert(articleCategories);
   }
 
-  private calculateAirportPriceFrom (services: Pick<ServiceEntity, 'airportIATA' | 'meeting'>[]): number {
-    const prices = services.map((service) => {
-      return ServicePriceFromService.calculateServicePriceFrom(service);
-    });
-    const minPrice = min(prices);
+  private async seedArticlesWithRelations () {
+    const articlesWithoutRelations = articles.map((article) => ({
+      ...article,
+      publisherId: publishers[0].id,
+    }));
 
-    if (!minPrice) return 0;
-
-    return Number.isFinite(minPrice) ? minPrice : 0;
+    await this.articleEntityRepository.insert(articlesWithoutRelations);
   }
-  */
 }

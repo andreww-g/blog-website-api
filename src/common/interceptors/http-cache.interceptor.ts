@@ -1,10 +1,19 @@
-import { CACHE_KEY_METADATA, CacheInterceptor, ExecutionContext, Injectable } from '@nestjs/common';
-
+import { CACHE_KEY_METADATA, CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
+import {
+  ExecutionContext,
+  Injectable,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class HttpCacheInterceptor extends CacheInterceptor {
+  #reflector: Reflector = new Reflector();
+
+  constructor () {
+    super(CACHE_MANAGER, new Reflector());
+  }
   trackBy (context: ExecutionContext): string | undefined {
-    const cacheKey = this.reflector.get(
+    const cacheKey = this.#reflector.get(
       CACHE_KEY_METADATA,
       context.getHandler(),
     );

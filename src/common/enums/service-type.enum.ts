@@ -1,5 +1,0 @@
-export enum ServiceTypeEnum {
-  MEET_AND_GREET = 'MEET_AND_GREET',
-  PRIVATE_SUITE = 'PRIVATE_SUITE',
-  VIP_SALON = 'VIP_SALON',
-}

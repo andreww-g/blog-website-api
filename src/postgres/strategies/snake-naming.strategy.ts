@@ -4,9 +4,7 @@ import { snakeCase } from 'typeorm/util/StringUtils';
 
 export class SnakeNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
   tableName (className: string, customName: string): string {
-    return customName
-      ? customName
-      : snakeCase(className.replace(/Entity$/, ''));
+    return customName ?? snakeCase(className.replace(/Entity$/, ''));
   }
 
   columnName (
@@ -16,7 +14,7 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy implements Naming
   ): string {
     return (
       snakeCase([...embeddedPrefixes, ''].join('_')) +
-      (customName ? customName : snakeCase(propertyName))
+      (customName ?? snakeCase(propertyName))
     );
   }
 
@@ -36,7 +34,7 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy implements Naming
     return snakeCase(
       firstTableName +
       '_' +
-      firstPropertyName.replace(/\./gi, '_') +
+      firstPropertyName.replaceAll(/\./gi, '_') +
       '_' +
       secondTableName,
     );
@@ -48,7 +46,7 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy implements Naming
     columnName?: string,
   ): string {
     return snakeCase(
-      tableName + '_' + (columnName ? columnName : propertyName),
+      tableName + '_' + (columnName ?? propertyName),
     );
   }
 

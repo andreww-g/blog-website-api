@@ -6,89 +6,95 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { CharactersService } from '../characters/characters.service';
-import { CharacterEntity } from '../characters/entities/character.entity';
+import { AuthorService } from '../author/author.service';
+import { AuthorEntity } from '../author/entities/author.entity';
 import { PasswordService } from '../common/services/password.service';
 import { tryCatch } from '../common/utils/try-catch';
+import { ConfigService } from '../config/config.service';
 
 import { JwtTokensDto } from './dtos/response/jwt-tokens.dto';
 
 @Injectable()
 export class AuthService {
-  private readonly jwtExpiresIn = '2h';
-  private readonly jwtRefreshExpiresIn = '7d';
+  #config = new ConfigService();
+  private readonly jwtExpiresIn = this.#config.jwtParams.tokenTTL.access;
+  private readonly jwtRefreshExpiresIn =
+    this.#config.jwtParams.tokenTTL.refresh;
 
-  constructor(
+  constructor (
     private readonly jwtService: JwtService,
-    private readonly charactersService: CharactersService,
+    private readonly authorService: AuthorService,
   ) {}
 
-  async loginAdmin(data: {
-    nickName: string;
-    password: string;
+  async loginAuthor (data: {
+    email: string,
+    password: string,
   }): Promise<JwtTokensDto> {
-    const { nickName, password } = data;
-    const character = await this.charactersService.findOneByNickname(nickName);
+    const { email, password } = data;
+    const author = await this.authorService.findOneByEmail(email);
 
-    await this.checkCredentials(character, password);
+    console.log(data);
+    await this.checkCredentials(author, password);
 
-    return this.generateTokenPairCharacter(character);
+    return this.generateTokenPairAuthor(author);
   }
 
-  async refreshAccessToken(refreshToken: string): Promise<JwtTokensDto> {
+  async refreshAccessToken (refreshToken: string): Promise<JwtTokensDto> {
     const { data, error } = await tryCatch(async () => {
       const decoded = this.jwtService.verify(refreshToken);
 
-      if (decoded.type !== 'refresh')
+      if (decoded.type !== 'refresh') {
         throw new Error(
           'You must provide refresh token. Access token was provided.',
         );
+      }
 
-      const user = await this.charactersService.findOneById(decoded.userId);
+      const user = await this.authorService.findOneById(decoded.userId);
 
-      return this.generateTokenPairCharacter(user);
+      return this.generateTokenPairAuthor(user);
     });
 
     if (error) throw new UnauthorizedException('Invalid refresh token');
-    if (!data)
+    if (!data) {
       throw new InternalServerErrorException(
         'Something went wrong during refreshing',
       );
+    }
 
     return data;
   }
 
-  private async checkCredentials(character: CharacterEntity, password: string) {
-    if (!character) {
+  private async checkCredentials (author: AuthorEntity, password: string) {
+    if (!author) {
       throw new UnauthorizedException();
     }
 
-    if (character.deletedAt) {
+    if (author.deletedAt) {
       throw new ForbiddenException(
-        `Character ${character.nickName} was deleted`,
+        `Author with email ${author.user.email} was deleted`,
       );
     }
 
     if (
-      !(await PasswordService.comparePassword(password, character.password))
+      !(await PasswordService.comparePassword(password, author.user.password))
     ) {
       throw new UnauthorizedException();
     }
   }
 
-  private async generateTokenPairCharacter(
-    character: CharacterEntity,
+  private async generateTokenPairAuthor (
+    author: AuthorEntity,
   ): Promise<JwtTokensDto> {
-    const payloadCharacter = {
-      characterId: character.id,
-      nickName: character.nickName,
+    const payloadAuthor = {
+      authorId: author.id,
+      email: author.user.email,
     };
 
     return {
-      accessToken: this.jwtService.sign(payloadCharacter, {
+      accessToken: this.jwtService.sign(payloadAuthor, {
         expiresIn: this.jwtExpiresIn,
       }),
-      refreshToken: this.jwtService.sign(payloadCharacter, {
+      refreshToken: this.jwtService.sign(payloadAuthor, {
         expiresIn: this.jwtRefreshExpiresIn,
       }),
     };

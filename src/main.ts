@@ -1,4 +1,3 @@
-import '@total-typescript/ts-reset';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -9,9 +8,10 @@ import { AppModule } from './app.module';
 import { AllExceptionFilter } from './common/filters/all-exception.filter';
 import { ConfigService } from './config/config.service';
 
-
 async function bootstrap () {
-  const { server: { port, host } } = new ConfigService();
+  const {
+    server: { port, host },
+  } = new ConfigService();
 
   const app = await NestFactory.create(AppModule, { cors: true });
 
@@ -54,7 +54,10 @@ async function bootstrap () {
   app.useGlobalPipes(new ZodValidationPipe());
 
   await app.listen(port, () => {
-    Logger.log(`API Gateway REST is running on http://${host}:${port}/v1/docs`, 'Bootstrap');
+    Logger.log(
+      `API Gateway REST is running on http://${host}:${port}/v1/docs`,
+      'Bootstrap',
+    );
   });
 }
 

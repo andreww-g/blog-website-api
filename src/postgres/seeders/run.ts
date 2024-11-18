@@ -1,29 +1,26 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-
-
 import { SeedPostgresModule } from './seed-postgres.module';
 import { SeedPostgresService } from './seed-postgres.service';
 
-
 async function bootstrap () {
-  NestFactory.createApplicationContext(SeedPostgresModule)
-    .then((appContext) => {
-      const seeder = appContext.get(SeedPostgresService);
+  const logger = new Logger('Seeder');
 
-      seeder
-        .refreshDB()
-        .then(() => {
-          Logger.debug('Seeding complete!');
-        })
-        .catch((error) => {
-          Logger.error('Seeding failed!');
-          throw error;
-        })
-        .finally(() => appContext.close());
-    })
-    .catch((error) => {
-      throw error;
-    });
+  logger.log('Starting seeding...');
+
+  try {
+    const appContext = await NestFactory.createApplicationContext(SeedPostgresModule);
+    const seeder = appContext.get(SeedPostgresService);
+
+    await seeder.refreshDB();
+    logger.log('Seeding completed successfully');
+
+    await appContext.close();
+  } catch (error) {
+    logger.error('Seeding failed!');
+    logger.error(error);
+    throw error;
+  }
 }
+
 bootstrap();

@@ -1,31 +1,33 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
   OneToOne,
 } from 'typeorm';
+
 import { AuthorEntity } from '../../author/entities/author.entity';
+import { FileEntity } from '../../file/entities/file.entity';
 import { DefaultEntity } from '../../postgres/entities/default.entity';
 
 @Entity('users')
 export class UserEntity extends DefaultEntity {
   @Column({ unique: true })
-  email: string;
+    email: string;
 
   @Column()
-  password: string;
+    password: string;
 
   @Column()
-  firstName: string;
+    firstName: string;
 
   @Column()
-  lastName: string;
+    lastName: string;
 
-  @Column({ nullable: true })
-  avatar: string | null;
+  @OneToOne(() => FileEntity, { nullable: true })
+    avatar: FileEntity | null;
+
+  @Column('uuid', { nullable: false })
+    authorId: string;
 
   @OneToOne(() => AuthorEntity, (author) => author.user)
-  author: AuthorEntity;
+    author: AuthorEntity;
 }

@@ -7,7 +7,7 @@ import { RedisClientOptions } from 'redis';
 
 @Injectable()
 export class ConfigService {
-  private readonly envFiles = ['.env', '.env.local'];
+  private readonly envFiles = ['.env'];
   private readonly envProvider: Record<string, string> = {};
 
   constructor() {
@@ -52,8 +52,8 @@ export class ConfigService {
   get jwtParams() {
     return {
       tokenTTL: {
-        access: '1h',
-        refresh: '7d',
+        access: this.get('JWT_ACCESS_EXPIRATION'),
+        refresh: this.get('JWT_REFRESH_EXPIRATION'),
       },
     };
   }
