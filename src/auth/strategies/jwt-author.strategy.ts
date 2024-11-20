@@ -1,44 +1,61 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { clone } from 'lodash';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+import { AuthorService } from '../../authors/author.service';
+import { AuthTokenTypeEnum } from '../../common/enums/auth-token-type.enum';
 import { ConfigService } from '../../config/config.service';
 import { JwtAuthorPayloadType } from '../types/jwt-author-payload.type';
-import { AuthorService } from '../../author/author.service';
-import { clone } from 'lodash';
+
 
 @Injectable()
-export class JwtAuthorStrategy extends PassportStrategy(
-  Strategy,
-  'jwt-author',
-) {
-  constructor(private readonly authorService: AuthorService) {
+export class JwtAuthorStrategy extends PassportStrategy(Strategy, 'jwt') {
+  constructor (private readonly authorService: AuthorService) {
+    const config = new ConfigService();
+
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken,
-      ignoreExpiration: true,
-      secretOrKey: new ConfigService().getJwtConfig.secret,
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      secretOrKey: config.getJwtConfig.secret,
+      ignoreExpiration: false,
     });
   }
 
-  async validate(payload: unknown) {
-    if (!this.isAuthorJwtPayload(payload)) return false;
+  async validate (payload: unknown) {
+    if (!this.isAuthorJwtPayload(payload)) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
 
-    const author = await this.authorService.findOneById(payload.authorId);
+    if (payload.type !== AuthTokenTypeEnum.ACCESS) {
+      throw new UnauthorizedException('Invalid token type');
+    }
 
-    if (author.user.email !== payload.email) return false;
+    const author = await this.authorService.findOneById(payload.sub);
 
-    return payload;
+    if (!author || author.id !== payload.sub) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return {
+      authorId: author.id,
+      email: author.user.email,
+    };
   }
 
-  private isAuthorJwtPayload(
+  private isAuthorJwtPayload (
     authorPayload: unknown,
   ): authorPayload is JwtAuthorPayloadType {
-    if (typeof authorPayload !== 'object' || authorPayload === null)
+    if (typeof authorPayload !== 'object' || authorPayload === null) {
       return false;
+    }
 
     const copy = clone(authorPayload) as JwtAuthorPayloadType;
 
-    if (typeof copy.authorId !== 'string') return false;
-    return typeof copy.email === 'string';
+    return (
+      typeof copy.sub === 'string' &&
+      typeof copy.email === 'string' &&
+      typeof copy.type === 'string' &&
+      typeof copy.role === 'string'
+    );
   }
 }

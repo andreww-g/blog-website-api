@@ -3,16 +3,16 @@ import { CreateDateColumn, DeleteDateColumn, PrimaryGeneratedColumn, UpdateDateC
 
 export class DefaultEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+    id: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+    createdAt: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+    updatedAt: Date;
 
   @DeleteDateColumn({
     nullable: true,
   })
-  deletedAt: Date | null;
+    deletedAt: Date | null;
 }

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-function isEnum(obj: any): obj is Record<string, string> {
+
+function isEnum (obj: any): obj is Record<string, string> {
   return (
     typeof obj === 'object' &&
     !Array.isArray(obj) &&
@@ -8,7 +9,7 @@ function isEnum(obj: any): obj is Record<string, string> {
   );
 }
 
-export function zodArraySchema<T extends z.ZodTypeAny | Record<string, string>>(
+export function zodArraySchema<T extends z.ZodTypeAny | Record<string, string>> (
   type: T,
 ) {
   return z.preprocess(

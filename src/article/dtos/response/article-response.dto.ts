@@ -1,6 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
+
 export const articleResponseSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),

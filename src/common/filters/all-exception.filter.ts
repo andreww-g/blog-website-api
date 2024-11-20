@@ -13,12 +13,13 @@ import { ZodError } from 'zod';
 
 import { HttpExceptionTypeEnum } from '../enums/http-exception-type.enum';
 
+
 @Catch()
 export class AllExceptionFilter {
   private readonly logger = new Logger(this.constructor.name);
   private readonly configService = new ConfigService();
 
-  catch(exception: Error | ZodValidationException, host: ArgumentsHost) {
+  catch (exception: Error | ZodValidationException, host: ArgumentsHost) {
     const { statusCode, response } = this.handleException(exception);
     const ctx = host.switchToHttp();
     const request = ctx.getRequest();
@@ -35,7 +36,7 @@ export class AllExceptionFilter {
     return responseContext.status(statusCode).json(response);
   }
 
-  private handleException(exception: Error | ZodValidationException) {
+  private handleException (exception: Error | ZodValidationException) {
     if (
       exception instanceof InternalServerErrorException &&
       (exception as any).error instanceof ZodError
@@ -46,22 +47,22 @@ export class AllExceptionFilter {
     }
 
     if (exception instanceof ZodValidationException)
-      return this.handleZodValidationException(exception);
+    {return this.handleZodValidationException(exception);}
 
     if (exception instanceof HttpException)
-      return this.handleHttpException(exception);
+    {return this.handleHttpException(exception);}
 
     if (exception instanceof TypeORMError)
-      return this.handleTypeormException(exception);
+    {return this.handleTypeormException(exception);}
 
     return this.handleUnknownException(exception);
   }
 
-  private handleHttpException(exception: HttpException) {
+  private handleHttpException (exception: HttpException) {
     const { message, data } =
       (exception.getResponse() as {
-        message: string;
-        data?: Record<string, string>;
+        message: string,
+        data?: Record<string, string>,
       }) || {};
     const statusCode =
       exception.getStatus() || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -80,7 +81,7 @@ export class AllExceptionFilter {
     };
   }
 
-  private handleUnknownException(exception: Error) {
+  private handleUnknownException (exception: Error) {
     if (
       Object.values(HttpExceptionTypeEnum).includes(
         (exception as any)?.errorType,
@@ -104,7 +105,7 @@ export class AllExceptionFilter {
     };
   }
 
-  private handleZodValidationException(exception: ZodValidationException) {
+  private handleZodValidationException (exception: ZodValidationException) {
     return {
       statusCode: exception.getStatus(),
       response: {
@@ -116,7 +117,7 @@ export class AllExceptionFilter {
     };
   }
 
-  private handleZodSerializationException(
+  private handleZodSerializationException (
     exception: InternalServerErrorException & { error: ZodError },
   ) {
     return {
@@ -132,7 +133,7 @@ export class AllExceptionFilter {
     };
   }
 
-  private handleTypeormException(exception: TypeORMError) {
+  private handleTypeormException (exception: TypeORMError) {
     const { statusCode, errorType } = this.getTypeormErrorStatusCode(exception);
 
     return {
@@ -146,7 +147,7 @@ export class AllExceptionFilter {
     };
   }
 
-  private getTypeormErrorStatusCode(exception: TypeORMError) {
+  private getTypeormErrorStatusCode (exception: TypeORMError) {
     const errorType = exception.constructor.name;
 
     const defaultResponse = {

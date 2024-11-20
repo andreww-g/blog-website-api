@@ -1,7 +1,10 @@
 import { faker } from '@faker-js/faker/locale/ar';
 import { DeepPartial } from 'typeorm';
+
 import { ArticleEntity } from '../../../article/entities/article.entity';
+
 import { articleCategories } from './article-categories';
+
 
 export const articles: Omit<
   DeepPartial<ArticleEntity>,

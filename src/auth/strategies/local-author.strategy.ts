@@ -1,38 +1,29 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 
+import { AuthorService } from '../../authors/author.service';
 import { PasswordService } from '../../common/services/password.service';
 import { tryCatch } from '../../common/utils/try-catch';
-import { AuthorService } from '../../author/author.service';
+
 
 @Injectable()
-export class LocalAuthorStrategy extends PassportStrategy(Strategy, 'local-author') {
-  constructor(private readonly authorService: AuthorService) {
-    super({ usernameField: 'nickName' });
+export class LocalAuthorStrategy extends PassportStrategy(Strategy, 'local') {
+  private strategyFailureMessage = 'Something went wrong during local strategy validation';
+
+  constructor (private readonly authorService: AuthorService) {
+    super({ usernameField: 'email', passwordField: 'password' });
   }
 
-  async validate(email: string, password: string) {
-    const { data: author, error } = await tryCatch(() =>
-      this.authorService.findOneByEmail(email),
-    );
+  async validate (email: string, password: string) {
+    const { data: author, error } = await tryCatch(() => this.authorService.findOneByEmail(email));
 
-    if (error) throw error;
-    if (!author)
-      throw new InternalServerErrorException(
-        'Something went wrong during local strategy validation',
-      );
+    if (error) throw new InternalServerErrorException(this.strategyFailureMessage);
+    if (!author) throw new InternalServerErrorException(this.strategyFailureMessage);
 
-    const doesMatch = await PasswordService.comparePassword(
-      password,
-      author.user.password,
-    );
+    const doPasswordsMatch = await PasswordService.comparePassword(password, author.user.password);
 
-    if (!doesMatch) throw new UnauthorizedException();
+    if (!doPasswordsMatch) throw new UnauthorizedException(this.strategyFailureMessage);
 
     return author;
   }

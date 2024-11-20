@@ -1,7 +1,9 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+
 import { SeedPostgresModule } from './seed-postgres.module';
 import { SeedPostgresService } from './seed-postgres.service';
+
 
 async function bootstrap () {
   const logger = new Logger('Seeder');

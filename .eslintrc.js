@@ -28,9 +28,9 @@ module.exports = {
     '@typescript-eslint/semi': [2, 'always'],
     'no-mixed-spaces-and-tabs': 2,
     curly: [2, 'multi-line'],
+    indent: [2, 2],
     quotes: [2, 'single'],
-    'padding-line-between-statements': [
-      2,
+    'padding-line-between-statements': [2,
       {
         blankLine: 'always',
         prev: ['const', 'let', 'var', 'directive'],
@@ -59,36 +59,25 @@ module.exports = {
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
       'warn',
-      {
-        vars: 'all',
-        varsIgnorePattern: '^_',
-        args: 'after-used',
-        argsIgnorePattern: '^_',
-      },
+      { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
     ],
     'no-unused-vars': 0,
-    '@typescript-eslint/no-unused-vars': [
-      'error',
-      { vars: 'all', args: 'none', ignoreRestSiblings: false },
-    ],
+    '@typescript-eslint/no-unused-vars': ['error', { vars: 'all', args: 'none', ignoreRestSiblings: false }],
     '@typescript-eslint/no-empty-interface': 0,
-    'import/order': [
-      2,
-      {
-        pathGroupsExcludedImportTypes: ['@app/**'],
-        pathGroups: [
-          {
-            pattern: '@app/**',
-            group: 'external',
-            position: 'after',
-          },
-        ],
-        alphabetize: {
-          order: 'asc',
-          caseInsensitive: true,
-        },
+    'import/order': [2, {
+      'newlines-between': 'always',
+      pathGroupsExcludedImportTypes: ['@app/**'],
+      pathGroups: [{
+        pattern: '@app/**',
+        group: 'external',
+        position: 'after',
+      }],
+      alphabetize: {
+        order: 'asc',
+        caseInsensitive: true,
       },
-    ],
+    }],
+    'import/newline-after-import': [2, { count: 2 }],
     'unicorn/import-style': [
       'error',
       {
@@ -118,42 +107,30 @@ module.exports = {
     '@typescript-eslint/no-namespace': 0,
     'unicorn/prefer-type-error': 0,
     'unicorn/no-process-exit': 0,
-    '@typescript-eslint/member-delimiter-style': [
-      'error',
-      {
-        multiline: {
-          delimiter: 'comma',
-          requireLast: true,
-        },
-        singleline: {
-          delimiter: 'comma',
-          requireLast: false,
-        },
-        multilineDetection: 'brackets',
+    '@typescript-eslint/member-delimiter-style': ['error', {
+      multiline: {
+        delimiter: 'comma',
+        requireLast: true,
       },
-    ],
-    '@typescript-eslint/consistent-type-imports': [
-      'error',
-      {
-        prefer: 'no-type-imports',
-        disallowTypeAnnotations: false,
-        fixStyle: 'separate-type-imports',
+      singleline: {
+        delimiter: 'comma',
+        requireLast: false,
       },
-    ],
-    'keyword-spacing': [
-      'error',
-      {
-        before: true,
-        after: true,
-      },
-    ],
-    'arrow-spacing': [
-      'error',
-      {
-        before: true,
-        after: true,
-      },
-    ],
+      multilineDetection: 'brackets',
+    }],
+    '@typescript-eslint/consistent-type-imports': ['error', {
+      prefer: 'no-type-imports',
+      disallowTypeAnnotations: false,
+      fixStyle: 'separate-type-imports',
+    }],
+    'keyword-spacing': ['error', {
+      before: true,
+      after: true,
+    }],
+    'arrow-spacing': ['error', {
+      before: true,
+      after: true,
+    }],
   },
   ignorePatterns: ['**/prisma/src/client/**'],
 };

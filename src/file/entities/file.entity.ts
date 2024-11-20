@@ -2,6 +2,7 @@ import { Column, Entity } from 'typeorm';
 
 import { DefaultEntity } from '../../postgres/entities/default.entity';
 
+
 @Entity()
 export class FileEntity extends DefaultEntity {
   @Column('varchar', { nullable: false })

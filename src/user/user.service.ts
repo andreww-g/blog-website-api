@@ -4,20 +4,21 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
-import { UserEntity } from './entities/user.entity';
-import { UserCreateRequestDto } from './dtos/request/user-create-request.dto';
-import { UserUpdateRequestDto } from './dtos/request/user-update-request.dto';
 import * as bcrypt from 'bcrypt';
+import { DeepPartial, Repository } from 'typeorm';
+
+import { UserCreateRequestDto } from './dtos/request/user-create-request.dto';
+import { UserEntity } from './entities/user.entity';
+
 
 @Injectable()
 export class UserService {
-  constructor(
+  constructor (
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  async create(createUserDto: UserCreateRequestDto): Promise<UserEntity> {
+  async create (createUserDto: UserCreateRequestDto): Promise<UserEntity> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -36,7 +37,7 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async findAll(): Promise<UserEntity[]> {
+  async findAll (): Promise<UserEntity[]> {
     return this.userRepository.find({
       select: [
         'id',
@@ -50,7 +51,7 @@ export class UserService {
     });
   }
 
-  async findOneById(id: string): Promise<UserEntity> {
+  async findOneById (id: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({
       where: { id },
       select: [
@@ -71,7 +72,7 @@ export class UserService {
     return user;
   }
 
-  async update(id: string, data: DeepPartial<UserEntity>): Promise<UserEntity> {
+  async update (id: string, data: DeepPartial<UserEntity>): Promise<UserEntity> {
     const user = await this.findOneById(id);
 
     if (data.password) {
@@ -92,8 +93,9 @@ export class UserService {
     return this.findOneById(id);
   }
 
-  async remove(id: string): Promise<boolean> {
+  async remove (id: string): Promise<boolean> {
     const result = await this.userRepository.delete(id);
+
     if (result.affected === 0) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

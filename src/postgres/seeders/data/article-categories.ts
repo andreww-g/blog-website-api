@@ -1,7 +1,9 @@
 import { faker } from '@faker-js/faker/locale/ar';
 import { DeepPartial } from 'typeorm';
+
 import { ArticleCategoryEntity } from '../../../article-category/entities/article-category.entity';
 import { ArticleCategoryEnum } from '../../../common/enums/article-category.enum';
+
 
 export const articleCategories: Omit<
   DeepPartial<ArticleCategoryEntity>,

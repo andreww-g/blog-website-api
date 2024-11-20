@@ -1,8 +1,10 @@
 import { faker } from '@faker-js/faker/locale/ar';
 import { DeepPartial } from 'typeorm';
 
-import { AuthorEntity } from '../../../author/entities/author.entity';
+import { AuthorEntity } from '../../../authors/entities/author.entity';
+
 import { users } from './users';
+
 
 export const authors: Omit<
   DeepPartial<AuthorEntity>,

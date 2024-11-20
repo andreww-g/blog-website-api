@@ -2,17 +2,20 @@ import { faker } from '@faker-js/faker/locale/ar';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { ArticleEntity } from '../../article/entities/article.entity';
 import { ArticleCategoryEntity } from '../../article-category/entities/article-category.entity';
-import { AuthorContactInfoEntity } from '../../author/entities/author-contact-info.entity';
-import { AuthorEntity } from '../../author/entities/author.entity';
-import { PublisherEntity } from '../../publisher/entities/publisher.entity';
+import { AuthorContactInfoEntity } from '../../authors/entities/author-contact-info.entity';
+import { AuthorEntity } from '../../authors/entities/author.entity';
+import { PublisherEntity } from '../../publishers/entities/publisher.entity';
 import { UserEntity } from '../../user/entities/user.entity';
+
 import { articleCategories } from './data/article-categories';
 import { articles } from './data/articles';
 import { authors } from './data/authors';
 import { publishers } from './data/publishers';
 import { users } from './data/users';
+
 
 @Injectable()
 export class SeedPostgresService {

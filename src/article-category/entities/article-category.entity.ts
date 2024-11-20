@@ -1,7 +1,9 @@
 import { Column, Entity, OneToMany } from 'typeorm';
-import { DefaultEntity } from '../../postgres/entities/default.entity';
+
 import { ArticleEntity } from '../../article/entities/article.entity';
 import { ArticleCategoryEnum } from '../../common/enums/article-category.enum';
+import { DefaultEntity } from '../../postgres/entities/default.entity';
+
 
 @Entity()
 export class ArticleCategoryEntity extends DefaultEntity {
@@ -9,11 +11,11 @@ export class ArticleCategoryEntity extends DefaultEntity {
     type: 'enum',
     enum: ArticleCategoryEnum,
   })
-  type: ArticleCategoryEnum;
+    type: ArticleCategoryEnum;
 
   @Column({ type: 'varchar' })
-  name: string;
+    name: string;
 
   @OneToMany(() => ArticleEntity, (article) => article.category)
-  articles: ArticleEntity[];
+    articles: ArticleEntity[];
 }

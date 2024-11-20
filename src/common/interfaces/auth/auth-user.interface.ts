@@ -1,6 +1,7 @@
 import { UserRoleEnum } from '../../enums/user-role.enum';
 
+
 export interface IAuthUser {
-  id: string,
+  authorId: string,
   role: UserRoleEnum,
 }

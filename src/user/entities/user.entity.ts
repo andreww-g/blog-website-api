@@ -4,9 +4,10 @@ import {
   OneToOne,
 } from 'typeorm';
 
-import { AuthorEntity } from '../../author/entities/author.entity';
+import { AuthorEntity } from '../../authors/entities/author.entity';
 import { FileEntity } from '../../file/entities/file.entity';
 import { DefaultEntity } from '../../postgres/entities/default.entity';
+
 
 @Entity('users')
 export class UserEntity extends DefaultEntity {
@@ -25,9 +26,9 @@ export class UserEntity extends DefaultEntity {
   @OneToOne(() => FileEntity, { nullable: true })
     avatar: FileEntity | null;
 
-  @Column('uuid', { nullable: false })
-    authorId: string;
+  @Column('uuid', { nullable: true })
+    authorId: string | null;
 
   @OneToOne(() => AuthorEntity, (author) => author.user)
-    author: AuthorEntity;
+    author: AuthorEntity | null;
 }
