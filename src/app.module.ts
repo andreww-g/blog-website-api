@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AppController } from './app.controller';
-import { ArticleModule } from './article/article.module';
+import { ArticlesModule } from './article/articles.module';
 import { ArticleCategoryModule } from './article-category/article-category.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthorModule } from './authors/author.module';
@@ -17,7 +17,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     PublisherModule,
     ReviewsModule,
     FileModule,
-    ArticleModule,
+    ArticlesModule,
     ArticleCategoryModule,
     AuthorModule,
     DatabasePostgresModule,

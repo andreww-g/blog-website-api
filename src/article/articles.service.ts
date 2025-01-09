@@ -9,7 +9,7 @@ import { ArticleEntity } from './entities/article.entity';
 
 
 @Injectable()
-export class ArticleService {
+export class ArticlesService {
   #cacheManager = createCache({});
 
   constructor (
@@ -96,6 +96,30 @@ export class ArticleService {
       .getManyAndCount();
 
     return { data: result, total };
+  }
+
+  async getRelativeArticles (id: string): Promise<ArticleEntity[]> {
+    const article = await this.findOneById(id, { onlyPublished: true });
+
+    if (!article) throw new Error(`Article with id: ${id} not found`);
+
+    const articles = await this.#cacheManager.wrap(
+      `article-relative-${id}`,
+      async () => {
+        return this.articleRepository
+          .createQueryBuilder('article')
+          .andWhere('article.id != :id', { id })
+          .andWhere('article.publishedAt IS NOT NULL')
+          .orderBy('RANDOM()')
+          .take(5)
+          .getMany();
+      },
+      24 * 60 * 60,
+    );
+
+    const mappedArticles = articles.map((a) => this.mapStringToDateInstance(a));
+
+    return mappedArticles || [];
   }
 
   async getRecommendations (id: string): Promise<ArticleEntity[]> {

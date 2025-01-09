@@ -24,7 +24,7 @@
     "migration:generate": "npm run typeorm migration:generate ./src/postgres/migrations/$npm_config_name",
     "migration:revert": "npm run typeorm migration:revert",
     "migration:show": "npm run typeorm migration:show",
-    "db:refresh": "npm run typeorm schema:drop && npm run migration:run",
+    "db:refresh": "npm run typeorm schema:drop && npm run migration:run && pnpm db:seed",
     "db:seed": "ts-node ./src/postgres/seeders/run.ts",
     "generate:module": "nest g mo ${npm_config_name} && nest g co ${npm_config_name} && nest g s ${npm_config_name} && mkdir -p src/${npm_config_name}/dtos src/${npm_config_name}/entities"
   },

@@ -21,8 +21,8 @@ async function bootstrap () {
   patchNestJsSwagger();
 
   const configSwagger = new DocumentBuilder()
-    .setTitle('SkyVip API')
-    .setDescription('The SkyVip API description')
+    .setTitle('Blog website API')
+    .setDescription('The Blog Website API description')
     .setVersion('1.0')
     .addApiKey({
       type: 'apiKey',
@@ -55,10 +55,7 @@ async function bootstrap () {
   app.useGlobalPipes(new ZodValidationPipe());
 
   await app.listen(port, () => {
-    Logger.log(
-      `API Gateway REST is running on http://${host}:${port}/v1/docs`,
-      'Bootstrap',
-    );
+    Logger.log(`API Gateway REST is running on http://${host}:${port}/v1/docs`, 'Bootstrap');
   });
 }
 

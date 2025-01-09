@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { z } from 'nestjs-zod/z';
@@ -16,25 +6,25 @@ import { z } from 'nestjs-zod/z';
 import { ApiZodEmptyResponse } from '../common/decorators/zod/api-zod-empty-response.decorator';
 import { ApiZodPaginatedResponse } from '../common/decorators/zod/api-zod-paginated-response.decorator';
 import { ApiZodResponse } from '../common/decorators/zod/api-zod-response.decorator';
+import { ZodQuery } from '../common/decorators/zod/zod-query.decorator';
 
-import { ArticleService } from './article.service';
+import { ArticlesService } from './articles.service';
 import { ArticleByIdRequestDto } from './dtos/request/article-by-id-request.dto';
 import { ArticleParamsDto } from './dtos/request/article-params.dto';
+import { ArticleQueryDto } from './dtos/request/article-query.dto';
 import { CreateArticleDto } from './dtos/request/create-article.dto';
 import { UpdateArticleDto } from './dtos/request/update-article.dto';
 import { ArticleResponseDto, articleResponseSchema } from './dtos/response/article-response.dto';
 
 
-@ApiTags('Article')
-@Controller('article')
-export class ArticleController {
-  constructor (private readonly articleService: ArticleService) {}
+@ApiTags('Articles')
+@Controller('articles')
+export class ArticlesController {
+  constructor (private readonly articleService: ArticlesService) {}
 
   @Post()
   @ApiZodResponse(articleResponseSchema)
-  async createArticle (
-    @Body() payload: CreateArticleDto,
-  ): Promise<{ success: true, data: ArticleResponseDto }> {
+  async createArticle (@Body() payload: CreateArticleDto): Promise<{ success: true, data: ArticleResponseDto }> {
     const article = await this.articleService.createArticle(payload);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
@@ -53,9 +43,7 @@ export class ArticleController {
 
   @Delete(':id')
   @ApiZodResponse(articleResponseSchema)
-  async deleteArticle (
-    @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],
-  ): Promise<{ success: true }> {
+  async deleteArticle (@Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id']): Promise<{ success: true }> {
     await this.articleService.deleteArticle(id);
 
     return { success: true };
@@ -85,18 +73,16 @@ export class ArticleController {
   @ApiZodResponse(articleResponseSchema)
   async getArticleById (
     @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],
-    @Query('onlyPublished') onlyPublished?: boolean,
+    @ZodQuery() query: ArticleQueryDto,
   ): Promise<{ success: true, data: ArticleResponseDto }> {
-    const article = await this.articleService.findOneById(id, { onlyPublished });
+    const article = await this.articleService.findOneById(id, query);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
   }
 
   @Get('by-slug/:slug')
   @ApiZodResponse(articleResponseSchema)
-  async getArticleBySlug (
-    @Param('slug') slug: string,
-  ): Promise<{ success: true, data: ArticleResponseDto }> {
+  async getArticleBySlug (@Param('slug') slug: string): Promise<{ success: true, data: ArticleResponseDto }> {
     const article = await this.articleService.findOneBySlug(slug);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
@@ -105,11 +91,17 @@ export class ArticleController {
   @Get()
   @ApiZodPaginatedResponse(articleResponseSchema)
   async getArticles (
-    @Query() params: ArticleParamsDto,
+    @ZodQuery() params: ArticleParamsDto,
   ): Promise<{ success: true, data: ArticleResponseDto[], total: number, skip: number, take: number }> {
     const { data, total } = await this.articleService.getArticles(params);
 
-    return { success: true, data: data.map((a) => plainToInstance(CreateArticleDto, a)), total, skip: params.skip, take: params.take };
+    return {
+      success: true,
+      data: data.map((a) => plainToInstance(CreateArticleDto, a)),
+      total,
+      skip: params.skip,
+      take: params.take,
+    };
   }
 
   @Get(':id/recommendations')
@@ -120,5 +112,15 @@ export class ArticleController {
     const recommendations = await this.articleService.getRecommendations(id);
 
     return { success: true, data: recommendations.map((rec) => plainToInstance(ArticleResponseDto, rec)) };
+  }
+
+  @Get('/relative')
+  @ApiZodResponse(z.array(articleResponseSchema))
+  async getRelativeArticles (
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ success: true, data: ArticleResponseDto[] }> {
+    const data = await this.articleService.getRelativeArticles(id);
+
+    return { success: true, data: data.map((rec) => plainToInstance(ArticleResponseDto, rec)) };
   }
 }
