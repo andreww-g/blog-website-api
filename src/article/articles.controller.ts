@@ -16,15 +16,14 @@ import { CreateArticleDto } from './dtos/request/create-article.dto';
 import { UpdateArticleDto } from './dtos/request/update-article.dto';
 import { ArticleResponseDto, articleResponseSchema } from './dtos/response/article-response.dto';
 
-
 @ApiTags('Articles')
 @Controller('articles')
 export class ArticlesController {
-  constructor (private readonly articleService: ArticlesService) {}
+  constructor(private readonly articleService: ArticlesService) {}
 
   @Post()
   @ApiZodResponse(articleResponseSchema)
-  async createArticle (@Body() payload: CreateArticleDto): Promise<{ success: true, data: ArticleResponseDto }> {
+  async createArticle(@Body() payload: CreateArticleDto): Promise<{ success: true; data: ArticleResponseDto }> {
     const article = await this.articleService.createArticle(payload);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
@@ -32,10 +31,10 @@ export class ArticlesController {
 
   @Patch(':id')
   @ApiZodResponse(articleResponseSchema)
-  async updateArticle (
+  async updateArticle(
     @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],
     @Body() payload: UpdateArticleDto,
-  ): Promise<{ success: true, data: ArticleResponseDto }> {
+  ): Promise<{ success: true; data: ArticleResponseDto }> {
     const article = await this.articleService.updateArticle(id, payload);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
@@ -43,7 +42,7 @@ export class ArticlesController {
 
   @Delete(':id')
   @ApiZodResponse(articleResponseSchema)
-  async deleteArticle (@Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id']): Promise<{ success: true }> {
+  async deleteArticle(@Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id']): Promise<{ success: true }> {
     await this.articleService.deleteArticle(id);
 
     return { success: true };
@@ -51,9 +50,9 @@ export class ArticlesController {
 
   @Post(':id/publish')
   @ApiZodEmptyResponse()
-  async publishArticle (
+  async publishArticle(
     @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],
-  ): Promise<{ success: true, data: ArticleResponseDto }> {
+  ): Promise<{ success: true; data: ArticleResponseDto }> {
     const article = await this.articleService.publishArticle(id);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
@@ -61,9 +60,9 @@ export class ArticlesController {
 
   @Post(':id/unpublish')
   @ApiZodResponse(articleResponseSchema)
-  async unpublishArticle (
+  async unpublishArticle(
     @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],
-  ): Promise<{ success: true, data: ArticleResponseDto }> {
+  ): Promise<{ success: true; data: ArticleResponseDto }> {
     const article = await this.articleService.unpublishArticle(id);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
@@ -71,10 +70,10 @@ export class ArticlesController {
 
   @Get(':id')
   @ApiZodResponse(articleResponseSchema)
-  async getArticleById (
+  async getArticleById(
     @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],
     @ZodQuery() query: ArticleQueryDto,
-  ): Promise<{ success: true, data: ArticleResponseDto }> {
+  ): Promise<{ success: true; data: ArticleResponseDto }> {
     const article = await this.articleService.findOneById(id, query);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
@@ -82,7 +81,7 @@ export class ArticlesController {
 
   @Get('by-slug/:slug')
   @ApiZodResponse(articleResponseSchema)
-  async getArticleBySlug (@Param('slug') slug: string): Promise<{ success: true, data: ArticleResponseDto }> {
+  async getArticleBySlug(@Param('slug') slug: string): Promise<{ success: true; data: ArticleResponseDto }> {
     const article = await this.articleService.findOneBySlug(slug);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
@@ -90,9 +89,9 @@ export class ArticlesController {
 
   @Get()
   @ApiZodPaginatedResponse(articleResponseSchema)
-  async getArticles (
+  async getArticles(
     @ZodQuery() params: ArticleParamsDto,
-  ): Promise<{ success: true, data: ArticleResponseDto[], total: number, skip: number, take: number }> {
+  ): Promise<{ success: true; data: ArticleResponseDto[]; total: number; skip: number; take: number }> {
     const { data, total } = await this.articleService.getArticles(params);
 
     return {
@@ -104,23 +103,23 @@ export class ArticlesController {
     };
   }
 
+  @Get(':id/related')
+  @ApiZodResponse(z.array(articleResponseSchema))
+  async getRelatedArticles(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ success: true; data: ArticleResponseDto[] }> {
+    const data = await this.articleService.getRelatedArticles(id);
+
+    return { success: true, data: data.map((rec) => plainToInstance(ArticleResponseDto, rec)) };
+  }
+
   @Get(':id/recommendations')
   @ApiZodResponse(z.array(articleResponseSchema))
-  async getRecommendations (
+  async getRecommendations(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<{ success: true, data: ArticleResponseDto[] }> {
+  ): Promise<{ success: true; data: ArticleResponseDto[] }> {
     const recommendations = await this.articleService.getRecommendations(id);
 
     return { success: true, data: recommendations.map((rec) => plainToInstance(ArticleResponseDto, rec)) };
-  }
-
-  @Get('/relative')
-  @ApiZodResponse(z.array(articleResponseSchema))
-  async getRelativeArticles (
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<{ success: true, data: ArticleResponseDto[] }> {
-    const data = await this.articleService.getRelativeArticles(id);
-
-    return { success: true, data: data.map((rec) => plainToInstance(ArticleResponseDto, rec)) };
   }
 }

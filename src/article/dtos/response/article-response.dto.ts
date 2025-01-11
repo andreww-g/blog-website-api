@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
+import { articleCategorySchema } from '../../../article-category/dtos/shared/article-category-request.dto';
 
 
 export const articleResponseSchema = z.object({
@@ -12,6 +13,7 @@ export const articleResponseSchema = z.object({
   slug: z.string(),
   tags: z.array(z.string()),
   image: z.string(),
+  category: articleCategorySchema,
   isPublished: z.boolean(),
   publishedAt: z.date().nullable(),
   createdAt: z.date(),

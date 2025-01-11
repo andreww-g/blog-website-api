@@ -2,33 +2,28 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createCache } from 'cache-manager';
 import { DeepPartial, IsNull, Not, Repository } from 'typeorm';
+import * as _ from 'lodash';
 
 import { SortOrderEnum } from '../common/enums/sort-order.enum';
 
 import { ArticleEntity } from './entities/article.entity';
 
-
 @Injectable()
 export class ArticlesService {
   #cacheManager = createCache({});
 
-  constructor (
+  constructor(
     @InjectRepository(ArticleEntity)
     private readonly articleRepository: Repository<ArticleEntity>,
   ) {}
 
-  async createArticle (
-    data: DeepPartial<ArticleEntity>,
-  ): Promise<ArticleEntity> {
+  async createArticle(data: DeepPartial<ArticleEntity>): Promise<ArticleEntity> {
     const article = await this.articleRepository.save(data);
 
     return this.findOneById(article.id);
   }
 
-  async updateArticle (
-    id: string,
-    data: DeepPartial<ArticleEntity>,
-  ): Promise<ArticleEntity> {
+  async updateArticle(id: string, data: DeepPartial<ArticleEntity>): Promise<ArticleEntity> {
     const article = await this.findOneById(id);
 
     if (!article) {
@@ -39,7 +34,7 @@ export class ArticlesService {
     return this.findOneById(id);
   }
 
-  async deleteArticle (id: string) {
+  async deleteArticle(id: string) {
     const article = await this.findOneById(id);
 
     if (!article) throw new Error(`Article with id: ${id} not found`);
@@ -49,46 +44,37 @@ export class ArticlesService {
     return article;
   }
 
-  async publishArticle (id: string) {
+  async publishArticle(id: string) {
     await this.articleRepository.update(id, { publishedAt: new Date() });
 
     return this.findOneById(id);
   }
 
-  async unpublishArticle (id: string) {
+  async unpublishArticle(id: string) {
     await this.articleRepository.update(id, { publishedAt: null });
 
     return this.findOneById(id);
   }
 
-  async findOneById (
-    id: string,
-    options?: { onlyPublished?: boolean },
-  ): Promise<ArticleEntity> {
+  async findOneById(id: string, options?: { onlyPublished?: boolean }): Promise<ArticleEntity> {
     const { onlyPublished } = options || {};
 
-    const conditions = onlyPublished
-      ? { id, publishedAt: Not(IsNull()) }
-      : { id };
+    const conditions = onlyPublished ? { id, publishedAt: Not(IsNull()) } : { id };
 
     return this.articleRepository.findOneByOrFail(conditions);
   }
 
-  async findOneBySlug (slug: string) {
+  async findOneBySlug(slug: string) {
     return this.articleRepository.findOneByOrFail({ slug });
   }
 
-  async getArticles (options: {
-    skip?: number,
-    take?: number,
-    sortOrder?: SortOrderEnum,
-    onlyPublished?: boolean,
-  }) {
+  async getArticles(options: { skip?: number; take?: number; sortOrder?: SortOrderEnum; onlyPublished?: boolean }) {
     options.sortOrder ||= SortOrderEnum.DESC;
     const { skip, take, sortOrder, onlyPublished } = options;
 
     const [result, total] = await this.articleRepository
       .createQueryBuilder('article')
+      .leftJoinAndSelect('article.category', 'category')
       .offset(skip)
       .limit(take)
       .orderBy({ 'article.createdAt': sortOrder })
@@ -98,31 +84,34 @@ export class ArticlesService {
     return { data: result, total };
   }
 
-  async getRelativeArticles (id: string): Promise<ArticleEntity[]> {
+  async getRelatedArticles(id: string): Promise<ArticleEntity[]> {
     const article = await this.findOneById(id, { onlyPublished: true });
 
     if (!article) throw new Error(`Article with id: ${id} not found`);
+    if (!article.categoryId) throw new Error(`Category ID for article ${id} is undefined`);
 
     const articles = await this.#cacheManager.wrap(
       `article-relative-${id}`,
       async () => {
-        return this.articleRepository
+        const query = this.articleRepository
           .createQueryBuilder('article')
+          .leftJoinAndSelect('article.category', 'category')
           .andWhere('article.id != :id', { id })
           .andWhere('article.publishedAt IS NOT NULL')
-          .orderBy('RANDOM()')
-          .take(5)
-          .getMany();
+          .andWhere('category.id = :categoryId', { categoryId: article.categoryId })
+          .orderBy('article.createdAt', 'DESC')
+          .take(20);
+
+        const rawArticles = await query.getMany();
+        return _.shuffle(rawArticles).slice(0, 5);
       },
       24 * 60 * 60,
     );
 
-    const mappedArticles = articles.map((a) => this.mapStringToDateInstance(a));
-
-    return mappedArticles || [];
+    return articles.map((a) => this.mapStringToDateInstance(a)) || [];
   }
 
-  async getRecommendations (id: string): Promise<ArticleEntity[]> {
+  async getRecommendations(id: string): Promise<ArticleEntity[]> {
     const article = await this.findOneById(id, { onlyPublished: true });
 
     if (!article) throw new Error(`Article with id: ${id} not found`);
@@ -132,6 +121,7 @@ export class ArticlesService {
       async () => {
         return this.articleRepository
           .createQueryBuilder('article')
+          .leftJoinAndSelect('article.category', 'category')
           .orderBy('RANDOM()')
           .andWhere('article.id != :id', { id })
           .andWhere('article.publishedAt IS NOT NULL')
@@ -146,7 +136,7 @@ export class ArticlesService {
     return mappedArticles || [];
   }
 
-  private mapStringToDateInstance (entity: ArticleEntity) {
+  private mapStringToDateInstance(entity: ArticleEntity) {
     return {
       ...entity,
       publishedAt: entity.publishedAt ? new Date(entity.publishedAt) : null,

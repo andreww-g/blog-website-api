@@ -1,34 +1,29 @@
-import {
-  Column,
-  Entity,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, OneToOne } from 'typeorm';
 
 import { AuthorEntity } from '../../authors/entities/author.entity';
 import { FileEntity } from '../../file/entities/file.entity';
 import { DefaultEntity } from '../../postgres/entities/default.entity';
 
-
 @Entity('users')
 export class UserEntity extends DefaultEntity {
   @Column({ unique: true })
-    email: string;
+  email: string;
 
   @Column()
-    password: string;
+  password: string;
 
   @Column()
-    firstName: string;
+  firstName: string;
 
   @Column()
-    lastName: string;
+  lastName: string;
 
   @OneToOne(() => FileEntity, { nullable: true })
-    avatar: FileEntity | null;
+  avatar: FileEntity | null;
 
   @Column('uuid', { nullable: true })
-    authorId: string | null;
+  authorId: string | null;
 
   @OneToOne(() => AuthorEntity, (author) => author.user)
-    author: AuthorEntity | null;
+  author: AuthorEntity | null;
 }
