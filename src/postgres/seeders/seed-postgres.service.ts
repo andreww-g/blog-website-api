@@ -5,82 +5,70 @@ import { Repository } from 'typeorm';
 
 import { ArticleEntity } from '../../article/entities/article.entity';
 import { ArticleCategoryEntity } from '../../article-category/entities/article-category.entity';
-import { AuthorContactInfoEntity } from '../../authors/entities/author-contact-info.entity';
-import { AuthorEntity } from '../../authors/entities/author.entity';
 import { PublisherEntity } from '../../publishers/entities/publisher.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 
 import { articleCategories } from './data/article-categories';
 import { articles } from './data/articles';
-import { authors } from './data/authors';
 import { publishers } from './data/publishers';
 import { users } from './data/users';
-
+import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-contact-info.entity';
 
 @Injectable()
 export class SeedPostgresService {
-  constructor (
+  constructor(
     @InjectRepository(UserEntity) private readonly userEntityRepository: Repository<UserEntity>,
     @InjectRepository(PublisherEntity) private readonly publisherEntityRepository: Repository<PublisherEntity>,
-    @InjectRepository(AuthorEntity) private readonly authorEntityRepository: Repository<AuthorEntity>,
     @InjectRepository(ArticleEntity) private readonly articleEntityRepository: Repository<ArticleEntity>,
-    @InjectRepository(ArticleCategoryEntity) private readonly articleCategoryEntityRepository: Repository<ArticleCategoryEntity>,
-    @InjectRepository(AuthorContactInfoEntity) private readonly authorContactInfoEntityRepository: Repository<AuthorContactInfoEntity>,
+    @InjectRepository(ArticleCategoryEntity)
+    private readonly articleCategoryEntityRepository: Repository<ArticleCategoryEntity>,
+    @InjectRepository(PublisherContactInfoEntity)
+    private readonly publisherContactInfoEntityRepository: Repository<PublisherContactInfoEntity>,
   ) {}
 
-  async refreshDB () {
+  async refreshDB() {
     await this.clearTables();
 
     await this.seedUsers();
-    await this.seedAuthorsWithRelations();
     await this.seedArticleCategories();
     await this.seedPublishersWithRelations();
     await this.seedArticlesWithRelations();
   }
 
-  private async clearTables () {
+  private async clearTables() {
     await this.articleEntityRepository.delete({});
     await this.publisherEntityRepository.delete({});
-    await this.authorContactInfoEntityRepository.delete({});
-    await this.authorEntityRepository.delete({});
+    await this.publisherContactInfoEntityRepository.delete({});
     await this.articleCategoryEntityRepository.delete({});
     await this.userEntityRepository.delete({});
   }
 
-  private async seedUsers () {
+  private async seedUsers() {
     await this.userEntityRepository.insert(users);
   }
 
-  private async seedAuthorsWithRelations () {
-    const createdAuthors = await this.authorEntityRepository.save(authors);
+  private async seedPublishersWithRelations() {
+    const savedPublishers = await this.publisherEntityRepository.save(publishers);
 
-    for (const author of createdAuthors) {
+    for (const publisher of savedPublishers) {
       const contactInfo = {
         id: faker.string.uuid(),
         instagram: faker.internet.url(),
         facebook: faker.internet.url(),
         telegram: faker.internet.url(),
-        author: author,
+        publisherId: publisher.id,
+        publisher,
       };
 
-      await this.authorContactInfoEntityRepository.save(contactInfo);
+      await this.publisherContactInfoEntityRepository.insert(contactInfo);
     }
   }
 
-  private async seedPublishersWithRelations () {
-    const publishersWithoutArticles = publishers.map((pub) => ({
-      id: pub.id,
-      authorId: pub.authorId,
-    }));
-
-    await this.publisherEntityRepository.insert(publishersWithoutArticles);
-  }
-
-  private async seedArticleCategories () {
+  private async seedArticleCategories() {
     await this.articleCategoryEntityRepository.insert(articleCategories);
   }
 
-  private async seedArticlesWithRelations () {
+  private async seedArticlesWithRelations() {
     const articlesWithoutRelations = articles.map((article) => ({
       ...article,
       publisherId: publishers[0].id,

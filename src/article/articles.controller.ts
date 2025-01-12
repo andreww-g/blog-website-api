@@ -81,8 +81,11 @@ export class ArticlesController {
 
   @Get('by-slug/:slug')
   @ApiZodResponse(articleResponseSchema)
-  async getArticleBySlug(@Param('slug') slug: string): Promise<{ success: true; data: ArticleResponseDto }> {
-    const article = await this.articleService.findOneBySlug(slug);
+  async getArticleBySlug(
+    @Param('slug') slug: string,
+    @ZodQuery() query: ArticleQueryDto,
+  ): Promise<{ success: true; data: ArticleResponseDto }> {
+    const article = await this.articleService.findOneBySlug(slug, query);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
   }

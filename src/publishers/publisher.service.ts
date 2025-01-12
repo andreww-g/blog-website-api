@@ -1,36 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
-
-import { AuthorService } from '../authors/author.service';
 import { DEFAULT_TAKE } from '../common/utils/default-take';
 
 import { PublisherEntity } from './entities/publisher.entity';
-
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class PublisherService {
-  constructor (
+  constructor(
     @InjectRepository(PublisherEntity)
     private readonly publisherRepository: Repository<PublisherEntity>,
-    private readonly authorService: AuthorService,
+    private readonly userService: UserService,
   ) {}
 
-  async create (authorId: string, articleIds: string[]) {
-    const author = await this.authorService.findOneById(authorId);
+  async create(userId: string, articleIds: string[]) {
+    const user = await this.userService.findOneById(userId);
 
     const publisher = this.publisherRepository.create({
-      author,
+      user,
       articles: articleIds.map((id) => ({ id })),
     });
 
     return this.publisherRepository.save(publisher);
   }
 
-  async findOneById (id: string): Promise<PublisherEntity> {
+  async findOneById(id: string): Promise<PublisherEntity> {
     const publisher = await this.publisherRepository.findOne({
       where: { id },
-      relations: ['author', 'articles'],
+      relations: ['user', 'articles', 'contactInfo'],
     });
 
     if (!publisher) {
@@ -40,22 +38,21 @@ export class PublisherService {
     return publisher;
   }
 
-  async findAll (
+  async findAll(
     options: {
-      skip?: number,
-      take?: number,
-      searchQuery?: string,
+      skip?: number;
+      take?: number;
+      searchQuery?: string;
     } = {},
   ) {
     const { skip, take, searchQuery } = options;
 
     const queryBuilder = this.publisherRepository
       .createQueryBuilder('publisher')
-      .leftJoinAndSelect('publishers.authors', 'author')
-      .leftJoinAndSelect('authors.user', 'user')
-      .leftJoinAndSelect('publishers.articles', 'articles');
+      .leftJoinAndSelect('publisher.user', 'user')
+      .leftJoinAndSelect('publisher.articles', 'articles');
 
-    if (searchQuery) {
+    if (searchQuery && searchQuery !== 'null') {
       queryBuilder.where(
         new Brackets((qb) => {
           qb.where('user.firstName ILIKE :searchQuery', {
@@ -82,7 +79,7 @@ export class PublisherService {
     }
 
     if (skip) queryBuilder.skip(skip);
-    queryBuilder.skip(take || DEFAULT_TAKE);
+    queryBuilder.take(take || DEFAULT_TAKE);
 
     const [data, total] = await queryBuilder.getManyAndCount();
 

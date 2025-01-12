@@ -2,16 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { clone } from 'lodash';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-
-import { AuthorService } from '../../authors/author.service';
 import { AuthTokenTypeEnum } from '../../common/enums/auth-token-type.enum';
 import { ConfigService } from '../../config/config.service';
-import { JwtAuthorPayloadType } from '../types/jwt-author-payload.type';
-
+import { JwtUserPayloadType } from '../types/jwt-user-payload.type';
+import { UserService } from '../../user/user.service';
 
 @Injectable()
-export class JwtAuthorStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor (private readonly authorService: AuthorService) {
+export class JwtUserStrategy extends PassportStrategy(Strategy, 'jwt') {
+  constructor(private readonly userService: UserService) {
     const config = new ConfigService();
 
     super({
@@ -21,8 +19,8 @@ export class JwtAuthorStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate (payload: unknown) {
-    if (!this.isAuthorJwtPayload(payload)) {
+  async validate(payload: unknown) {
+    if (!this.isUserJwtPayload(payload)) {
       throw new UnauthorizedException('Invalid token payload');
     }
 
@@ -30,26 +28,24 @@ export class JwtAuthorStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Invalid token type');
     }
 
-    const author = await this.authorService.findOneById(payload.sub);
+    const user = await this.userService.findOneById(payload.sub);
 
-    if (!author || author.id !== payload.sub) {
+    if (!user || user.id !== payload.sub) {
       throw new UnauthorizedException('User not found');
     }
 
     return {
-      authorId: author.id,
-      email: author.user.email,
+      userId: user.id,
+      email: user.email,
     };
   }
 
-  private isAuthorJwtPayload (
-    authorPayload: unknown,
-  ): authorPayload is JwtAuthorPayloadType {
-    if (typeof authorPayload !== 'object' || authorPayload === null) {
+  private isUserJwtPayload(userPayload: unknown): userPayload is JwtUserPayloadType {
+    if (typeof userPayload !== 'object' || userPayload === null) {
       return false;
     }
 
-    const copy = clone(authorPayload) as JwtAuthorPayloadType;
+    const copy = clone(userPayload) as JwtUserPayloadType;
 
     return (
       typeof copy.sub === 'string' &&

@@ -6,7 +6,6 @@ import { ArticleEntity } from '../../../article/entities/article.entity';
 
 import { articleCategories } from './article-categories';
 
-
 export const articles: Omit<DeepPartial<ArticleEntity>, 'createdAt' | 'updatedAt' | 'deletedAt'>[] = _.times(
   50,
   () => ({
@@ -16,7 +15,7 @@ export const articles: Omit<DeepPartial<ArticleEntity>, 'createdAt' | 'updatedAt
     description: faker.lorem.paragraph(),
     image: {
       id: faker.string.uuid(),
-      url: faker.image.url(),
+      url: faker.image.urlLoremFlickr({ height: 600, width: 900, category: 'article' }),
       size: faker.number.float(),
       name: faker.string.alpha({ casing: 'lower', length: 10 }),
     },

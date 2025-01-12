@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 
@@ -13,40 +13,32 @@ import { PublisherParamsRequestDto } from './dtos/request/publisher-params-reque
 import { PublisherResponseDto, publisherResponseSchema } from './dtos/response/publisher-response.dto';
 import { PublisherService } from './publisher.service';
 
-
 @ApiTags('Publishers')
-@Controller('publisher')
+@Controller('/public/publishers')
 export class PublisherController {
-  constructor (private readonly publisherService: PublisherService) {}
+  constructor(private readonly publisherService: PublisherService) {}
 
   @Post()
   @ApiZodResponse(publisherResponseSchema)
-  async create (
-    @Body() payload: PublisherCreateRequestDto,
-  ): Promise<ApiResponse<PublisherResponseDto>> {
-    const data = await this.publisherService.create(
-      payload.authorId,
-      payload.articleIds || [],
-    );
+  async create(@Body() payload: PublisherCreateRequestDto): Promise<ApiResponse<PublisherResponseDto>> {
+    const data = await this.publisherService.create(payload.userId, payload.articleIds || []);
 
     return { success: true, data: plainToInstance(PublisherResponseDto, data) };
   }
 
   @Get(':id')
   @ApiZodResponse(publisherResponseSchema)
-  async getPublisher (
-    @Param('id') id: PublisherByIdRequestDto['id'],
-  ): Promise<ApiResponse<PublisherResponseDto>> {
+  async getPublisher(@Param('id') id: PublisherByIdRequestDto['id']): Promise<ApiResponse<PublisherResponseDto>> {
     const data = await this.publisherService.findOneById(id);
-
+    console.log(data);
     return { success: true, data: plainToInstance(PublisherResponseDto, data) };
   }
 
   @Get()
   @ApiZodPaginatedResponse(publisherResponseSchema)
-  async getPublishers (
+  async getPublishers(
     @ZodQuery() payload: PublisherParamsRequestDto,
-  ): Promise<ApiResponse<{ data: PublisherResponseDto[], total: number }>> {
+  ): Promise<ApiResponse<{ data: PublisherResponseDto[]; total: number }>> {
     const result = await this.publisherService.findAll(payload);
 
     return {

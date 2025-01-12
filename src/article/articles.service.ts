@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createCache } from 'cache-manager';
-import { DeepPartial, IsNull, Not, Repository } from 'typeorm';
+import { DeepPartial, FindOptionsWhere, IsNull, Not, Repository } from 'typeorm';
 import * as _ from 'lodash';
 
 import { SortOrderEnum } from '../common/enums/sort-order.enum';
@@ -58,14 +58,29 @@ export class ArticlesService {
 
   async findOneById(id: string, options?: { onlyPublished?: boolean }): Promise<ArticleEntity> {
     const { onlyPublished } = options || {};
+    const conditions: FindOptionsWhere<ArticleEntity> = { id };
 
-    const conditions = onlyPublished ? { id, publishedAt: Not(IsNull()) } : { id };
+    conditions['publishedAt'] = onlyPublished ? Not(IsNull()) : IsNull();
 
-    return this.articleRepository.findOneByOrFail(conditions);
+    return this.articleRepository.findOneOrFail({
+      where: conditions,
+      relations: ['publisher', 'category'],
+    });
   }
 
-  async findOneBySlug(slug: string) {
-    return this.articleRepository.findOneByOrFail({ slug });
+  async findOneBySlug(slug: string, options?: { onlyPublished?: boolean }) {
+    const { onlyPublished } = options || {};
+
+    const conditions: FindOptionsWhere<ArticleEntity> = { slug };
+
+    if (typeof onlyPublished === 'boolean') {
+      conditions['publishedAt'] = onlyPublished ? Not(IsNull()) : IsNull();
+    }
+
+    return this.articleRepository.findOneOrFail({
+      where: conditions,
+      relations: ['publisher', 'category'],
+    });
   }
 
   async getArticles(options: { skip?: number; take?: number; sortOrder?: SortOrderEnum; onlyPublished?: boolean }) {
@@ -96,6 +111,8 @@ export class ArticlesService {
         const query = this.articleRepository
           .createQueryBuilder('article')
           .leftJoinAndSelect('article.category', 'category')
+          .leftJoinAndSelect('article.publisher', 'publisher')
+          .leftJoinAndSelect('publisher.user', 'user')
           .andWhere('article.id != :id', { id })
           .andWhere('article.publishedAt IS NOT NULL')
           .andWhere('category.id = :categoryId', { categoryId: article.categoryId })
@@ -122,6 +139,8 @@ export class ArticlesService {
         return this.articleRepository
           .createQueryBuilder('article')
           .leftJoinAndSelect('article.category', 'category')
+          .leftJoinAndSelect('article.publisher', 'publisher')
+          .leftJoinAndSelect('publisher.user', 'user')
           .orderBy('RANDOM()')
           .andWhere('article.id != :id', { id })
           .andWhere('article.publishedAt IS NOT NULL')

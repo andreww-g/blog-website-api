@@ -1,19 +1,26 @@
-import { Column, Entity, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 
 import { ArticleEntity } from '../../article/entities/article.entity';
-import { AuthorEntity } from '../../authors/entities/author.entity';
 import { DefaultEntity } from '../../postgres/entities/default.entity';
-
+import { UserEntity } from '../../user/entities/user.entity';
+import { FileEntity } from '../../file/entities/file.entity';
+import { PublisherContactInfoEntity } from './publisher-contact-info.entity';
 
 @Entity()
 export class PublisherEntity extends DefaultEntity {
-  @Column('uuid', { nullable: false })
-    authorId: string;
+  @OneToOne(() => FileEntity, { nullable: true })
+  avatar: FileEntity | null;
 
-  @OneToOne(() => AuthorEntity)
-  @JoinColumn({ name: 'authorId' })
-    author: AuthorEntity;
+  @OneToOne(() => PublisherContactInfoEntity, (contactInfo) => contactInfo.publisher, { cascade: true })
+  contactInfo: PublisherContactInfoEntity;
+
+  @Column('varchar')
+  userId: string;
+
+  @OneToOne(() => UserEntity)
+  @JoinColumn()
+  user: UserEntity;
 
   @OneToMany(() => ArticleEntity, (article) => article.publisher)
-    articles: ArticleEntity[];
+  articles: ArticleEntity[];
 }

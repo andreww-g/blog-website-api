@@ -1,8 +1,6 @@
 import { ForbiddenException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { AuthorService } from '../authors/author.service';
-import { AuthorEntity } from '../authors/entities/author.entity';
 import { AuthTokenTypeEnum } from '../common/enums/auth-token-type.enum';
 import { UserRoleEnum } from '../common/enums/user-role.enum';
 import { PasswordService } from '../common/services/password.service';
@@ -10,7 +8,8 @@ import { tryCatch } from '../common/utils/try-catch';
 import { ConfigService } from '../config/config.service';
 
 import { JwtTokensDto } from './dtos/response/jwt-tokens.dto';
-
+import { UserService } from '../user/user.service';
+import { UserEntity } from '../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -18,27 +17,27 @@ export class AuthService {
   private readonly jwtAccessExpiresIn = this.#config.jwtParams.tokenTTL.access;
   private readonly jwtRefreshExpiresIn = this.#config.jwtParams.tokenTTL.refresh;
 
-  constructor (
+  constructor(
     private readonly jwtService: JwtService,
-    private readonly authorService: AuthorService,
+    private readonly userService: UserService,
   ) {}
 
-  async loginAuthor (data: { email: string, password: string }): Promise<JwtTokensDto> {
+  async loginUser(data: { email: string; password: string }): Promise<JwtTokensDto> {
     const { email, password } = data;
-    const author = await this.authorService.findOneByEmail(email);
+    const user = await this.userService.findOneByEmail(email);
 
-    await this.checkCredentials(author, password);
+    await this.checkCredentials(user, password);
 
-    return await this.generateTokenPairAuthor(author);
+    return await this.generateTokenPairAuthor(user);
   }
 
-  async refreshAccessToken (refreshToken: string): Promise<JwtTokensDto> {
+  async refreshAccessToken(refreshToken: string): Promise<JwtTokensDto> {
     const { data, error } = await tryCatch(async () => {
       const decoded = this.jwtService.verify(refreshToken);
 
       if (decoded.type !== 'refresh') throw new Error('You must provide refresh token. Access token was provided.');
 
-      const user = await this.authorService.findOneById(decoded.authorId);
+      const user = await this.userService.findOneById(decoded.authorId);
 
       return this.generateTokenPairAuthor(user);
     });
@@ -49,31 +48,31 @@ export class AuthService {
     return data;
   }
 
-  private async checkCredentials (author: AuthorEntity, password: string) {
-    if (!author) {
+  private async checkCredentials(user: UserEntity, password: string) {
+    if (!user) {
       throw new UnauthorizedException();
     }
 
-    if (author.deletedAt) {
-      throw new ForbiddenException(`Author with email ${author.user.email} was deleted`);
+    if (user.deletedAt) {
+      throw new ForbiddenException(`User with email ${user.email} was deleted`);
     }
 
-    if (!(await PasswordService.comparePassword(password, author.user.password))) {
+    if (!(await PasswordService.comparePassword(password, user.password))) {
       throw new UnauthorizedException();
     }
   }
 
-  private async generateTokenPairAuthor (author: AuthorEntity): Promise<JwtTokensDto> {
+  private async generateTokenPairAuthor(user: UserEntity): Promise<JwtTokensDto> {
     return {
-      accessToken: this.jwtService.sign(...this.getTokenPairOptions(author, 'access')),
-      refreshToken: this.jwtService.sign(...this.getTokenPairOptions(author, 'refresh')),
+      accessToken: this.jwtService.sign(...this.getTokenPairOptions(user, 'access')),
+      refreshToken: this.jwtService.sign(...this.getTokenPairOptions(user, 'refresh')),
     };
   }
 
-  private getTokenPairOptions (author: AuthorEntity, type: 'access' | 'refresh'): [object, object] {
+  private getTokenPairOptions(user: UserEntity, type: 'access' | 'refresh'): [object, object] {
     const basePayload = {
-      sub: author.id,
-      email: author.user.email,
+      sub: user.id,
+      email: user.email,
       role: UserRoleEnum.CLIENT,
       type: type === 'access' ? AuthTokenTypeEnum.ACCESS : AuthTokenTypeEnum.REFRESH,
     };

@@ -7,12 +7,6 @@ export const userResponseSchema = z.object({
   email: z.string().email(),
   firstName: z.string(),
   lastName: z.string(),
-  avatar: z.object({
-    url: z.string().url(),
-    name: z.string(),
-    mimeType: z.string().nullable(),
-    size: z.number().nullable(),
-  }),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

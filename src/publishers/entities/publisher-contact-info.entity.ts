@@ -1,11 +1,10 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 import { DefaultEntity } from '../../postgres/entities/default.entity';
+import { PublisherEntity } from './publisher.entity';
 
-import { AuthorEntity } from './author.entity';
-
-@Entity('contact_info')
-export class AuthorContactInfoEntity extends DefaultEntity {
+@Entity('publisher_contact_info')
+export class PublisherContactInfoEntity extends DefaultEntity {
   @Column({ nullable: true })
   telegram: string | null;
 
@@ -15,7 +14,7 @@ export class AuthorContactInfoEntity extends DefaultEntity {
   @Column({ nullable: true })
   instagram: string | null;
 
-  @OneToOne(() => AuthorEntity, (author) => author.contactInfo)
+  @OneToOne(() => PublisherEntity, (pub) => pub.contactInfo)
   @JoinColumn()
-  author: AuthorEntity;
+  publisher: PublisherEntity;
 }

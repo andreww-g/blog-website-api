@@ -20,7 +20,7 @@ export class AuthController {
   @ApiZodResponse(jwtTokensSchema)
   @Post('login')
   async login (@Body() { email, password }: LoginPayloadDto): Promise<{ success: true, data: JwtTokensDto }> {
-    const data = await this.authService.loginAuthor({ email, password });
+    const data = await this.authService.loginUser({ email, password });
 
     return { success: true, data };
   }

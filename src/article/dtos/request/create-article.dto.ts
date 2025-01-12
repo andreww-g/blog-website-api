@@ -1,12 +1,11 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
-
 const createArticleSchema = z.object({
   title: z.string().min(1),
-  content: z.record((z.unknown())).nullable(),
+  content: z.record(z.unknown()).nullable(),
   description: z.string().min(1),
-  authorId: z.string().uuid(),
+  Id: z.string().uuid(),
   publisherId: z.string().uuid().optional(),
   slug: z.string().min(1),
   tags: z.array(z.string()).optional(),
