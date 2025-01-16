@@ -30,7 +30,7 @@ export class PublisherController {
   @ApiZodResponse(publisherResponseSchema)
   async getPublisher(@Param('id') id: PublisherByIdRequestDto['id']): Promise<ApiResponse<PublisherResponseDto>> {
     const data = await this.publisherService.findOneById(id);
-    console.log(data);
+
     return { success: true, data: plainToInstance(PublisherResponseDto, data) };
   }
 

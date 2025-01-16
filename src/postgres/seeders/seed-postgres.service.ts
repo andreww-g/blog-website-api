@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker/locale/ar';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -7,15 +7,17 @@ import { ArticleEntity } from '../../article/entities/article.entity';
 import { ArticleCategoryEntity } from '../../article-category/entities/article-category.entity';
 import { PublisherEntity } from '../../publishers/entities/publisher.entity';
 import { UserEntity } from '../../user/entities/user.entity';
+import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-contact-info.entity';
 
 import { articleCategories } from './data/article-categories';
 import { articles } from './data/articles';
 import { publishers } from './data/publishers';
 import { users } from './data/users';
-import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-contact-info.entity';
 
 @Injectable()
 export class SeedPostgresService {
+  private readonly logger = new Logger(SeedPostgresService.name);
+
   constructor(
     @InjectRepository(UserEntity) private readonly userEntityRepository: Repository<UserEntity>,
     @InjectRepository(PublisherEntity) private readonly publisherEntityRepository: Repository<PublisherEntity>,
@@ -27,53 +29,88 @@ export class SeedPostgresService {
   ) {}
 
   async refreshDB() {
-    await this.clearTables();
+    try {
+      this.logger.log('Starting database refresh...');
 
-    await this.seedUsers();
-    await this.seedArticleCategories();
-    await this.seedPublishersWithRelations();
-    await this.seedArticlesWithRelations();
+      await this.clearTables();
+
+      // Seed in correct order to maintain referential integrity
+      await this.seedUsers();
+      await this.seedArticleCategories();
+      await this.seedPublishersWithRelations();
+      await this.seedArticlesWithRelations();
+
+      this.logger.log('Database refresh completed successfully');
+    } catch (error) {
+      this.logger.error(`Failed to refresh database: ${error.message}`);
+      throw error;
+    }
   }
 
   private async clearTables() {
-    await this.articleEntityRepository.delete({});
-    await this.publisherEntityRepository.delete({});
-    await this.publisherContactInfoEntityRepository.delete({});
-    await this.articleCategoryEntityRepository.delete({});
+    this.logger.log('Clearing existing data...');
+
+    // Clear in reverse order of dependencies
+    await Promise.all([this.articleEntityRepository.delete({}), this.publisherContactInfoEntityRepository.delete({})]);
+
+    await Promise.all([this.publisherEntityRepository.delete({}), this.articleCategoryEntityRepository.delete({})]);
+
     await this.userEntityRepository.delete({});
   }
 
   private async seedUsers() {
-    await this.userEntityRepository.insert(users);
+    try {
+      this.logger.log(`Seeding ${users.length} users...`);
+      await this.userEntityRepository.insert(users);
+    } catch (error) {
+      this.logger.error(`Failed to seed users: ${error.message}`);
+      throw error;
+    }
   }
 
   private async seedPublishersWithRelations() {
-    const savedPublishers = await this.publisherEntityRepository.save(publishers);
+    try {
+      this.logger.log(`Seeding ${publishers.length} publishers...`);
+      const savedPublishers = await this.publisherEntityRepository.save(publishers);
 
-    for (const publisher of savedPublishers) {
-      const contactInfo = {
-        id: faker.string.uuid(),
-        instagram: faker.internet.url(),
-        facebook: faker.internet.url(),
-        telegram: faker.internet.url(),
-        publisherId: publisher.id,
-        publisher,
-      };
+      this.logger.log('Creating publisher contact info...');
+      const contactInfoPromises = savedPublishers.map((publisher) => {
+        const contactInfo = {
+          id: faker.string.uuid(),
+          instagram: `https://instagram.com/${faker.internet.username()}`,
+          facebook: `https://facebook.com/${faker.internet.username()}`,
+          telegram: `https://t.me/${faker.internet.username()}`,
+          publisherId: publisher.id,
+          publisher,
+        };
 
-      await this.publisherContactInfoEntityRepository.insert(contactInfo);
+        return this.publisherContactInfoEntityRepository.insert(contactInfo);
+      });
+
+      await Promise.all(contactInfoPromises);
+    } catch (error) {
+      this.logger.error(`Failed to seed publishers: ${error.message}`);
+      throw error;
     }
   }
 
   private async seedArticleCategories() {
-    await this.articleCategoryEntityRepository.insert(articleCategories);
+    try {
+      this.logger.log(`Seeding ${articleCategories.length} article categories...`);
+      await this.articleCategoryEntityRepository.insert(articleCategories);
+    } catch (error) {
+      this.logger.error(`Failed to seed article categories: ${error.message}`);
+      throw error;
+    }
   }
 
   private async seedArticlesWithRelations() {
-    const articlesWithoutRelations = articles.map((article) => ({
-      ...article,
-      publisherId: publishers[0].id,
-    }));
-
-    await this.articleEntityRepository.insert(articlesWithoutRelations);
+    try {
+      this.logger.log(`Seeding ${articles.length} articles...`);
+      await this.articleEntityRepository.insert(articles);
+    } catch (error) {
+      this.logger.error(`Failed to seed articles: ${error.message}`);
+      throw error;
+    }
   }
 }

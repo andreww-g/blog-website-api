@@ -24,9 +24,9 @@
     "migration:generate": "npm run typeorm migration:generate ./src/postgres/migrations/$npm_config_name",
     "migration:revert": "npm run typeorm migration:revert",
     "migration:show": "npm run typeorm migration:show",
-    "db:refresh": "npm run typeorm schema:drop && npm run migration:run && pnpm db:seed",
-    "db:seed": "ts-node ./src/postgres/seeders/run.ts",
-    "generate:module": "nest g mo ${npm_config_name} && nest g co ${npm_config_name} && nest g s ${npm_config_name} && mkdir -p src/${npm_config_name}/dtos src/${npm_config_name}/entities"
+    "db:refresh": "npm run typeorm schema:drop && npm run migration:run && npm run seed",
+    "generate:module": "nest g mo ${npm_config_name} && nest g co ${npm_config_name} && nest g s ${npm_config_name} && mkdir -p src/${npm_config_name}/dtos src/${npm_config_name}/entities",
+    "seed": "ts-node -r tsconfig-paths/register src/postgres/seeders/seed.ts"
   },
   "dependencies": {
     "@faker-js/faker": "^9.2.0",
@@ -47,6 +47,7 @@
     "fs": "0.0.1-security",
     "lodash": "^4.17.21",
     "luxon": "^3.5.0",
+    "nest-commander": "^3.15.0",
     "nestjs-zod": "^3.0.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

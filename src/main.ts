@@ -8,14 +8,12 @@ import { AppModule } from './app.module';
 import { AllExceptionFilter } from './common/filters/all-exception.filter';
 import { ConfigService } from './config/config.service';
 
-
-async function bootstrap () {
+async function bootstrap() {
   const {
     server: { port, host },
   } = new ConfigService();
 
   const app = await NestFactory.create(AppModule, { cors: true });
-
   app.setGlobalPrefix('v1', { exclude: ['/health'] });
 
   patchNestJsSwagger();

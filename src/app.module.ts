@@ -7,6 +7,8 @@ import { DatabasePostgresModule } from './postgres/database-postgres.module';
 import { PublisherModule } from './publishers/publisher.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { Module } from '@nestjs/common';
+import { SeedCommand } from './postgres/seeders/seed.command';
+import { SeedPostgresModule } from './postgres/seeders/seed-postgres.module';
 
 @Module({
   imports: [
@@ -17,7 +19,9 @@ import { Module } from '@nestjs/common';
     ArticlesModule,
     ArticleCategoryModule,
     DatabasePostgresModule,
+    SeedPostgresModule,
   ],
+  providers: [SeedCommand],
   controllers: [AppController],
 })
 export class AppModule {}

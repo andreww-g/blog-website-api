@@ -7,9 +7,10 @@ import { FileEntity } from '../../file/entities/file.entity';
 import { PublisherEntity } from '../../publishers/entities/publisher.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 import { DatabasePostgresModule } from '../database-postgres.module';
+import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-contact-info.entity';
 
 import { SeedPostgresService } from './seed-postgres.service';
-import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-contact-info.entity';
+import { SeedCommand } from './seed.command';
 
 @Module({
   imports: [
@@ -23,6 +24,6 @@ import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-
       PublisherContactInfoEntity,
     ]),
   ],
-  providers: [SeedPostgresService],
+  providers: [SeedPostgresService, SeedCommand],
 })
 export class SeedPostgresModule {}

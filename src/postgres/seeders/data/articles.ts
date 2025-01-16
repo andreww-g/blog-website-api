@@ -3,34 +3,38 @@ import * as _ from 'lodash';
 import { DeepPartial } from 'typeorm';
 
 import { ArticleEntity } from '../../../article/entities/article.entity';
-
 import { articleCategories } from './article-categories';
 
 export const articles: Omit<DeepPartial<ArticleEntity>, 'createdAt' | 'updatedAt' | 'deletedAt'>[] = _.times(
   50,
-  () => ({
-    id: faker.string.uuid(),
-    title: faker.lorem.sentence(),
-    slug: faker.helpers.slugify(faker.lorem.sentence().toLowerCase()),
-    description: faker.lorem.paragraph(),
-    image: {
+  () => {
+    const title = faker.lorem.sentence();
+    const selectedCategory = _.sample(articleCategories);
+    
+    return {
       id: faker.string.uuid(),
-      url: faker.image.urlLoremFlickr({ height: 600, width: 900, category: 'article' }),
-      size: faker.number.float(),
-      name: faker.string.alpha({ casing: 'lower', length: 10 }),
-    },
-    content: {
-      blocks: [
-        {
-          type: 'paragraph',
-          data: {
-            text: faker.lorem.paragraphs(3),
+      title,
+      slug: faker.helpers.slugify(title.toLowerCase()),
+      description: faker.lorem.paragraph(),
+      image: {
+        id: faker.string.uuid(),
+        url: faker.image.urlLoremFlickr({ height: 600, width: 900, category: 'article' }),
+        size: faker.number.float({ min: 100, max: 5000 }),
+        name: faker.string.alpha({ casing: 'lower', length: 10 }),
+      },
+      content: {
+        blocks: [
+          {
+            type: 'paragraph',
+            data: {
+              text: faker.lorem.paragraphs(3),
+            },
           },
-        },
-      ],
-    },
-    publishedAt: faker.date.past(),
-    categoryId: _.sample(articleCategories)?.id,
-    category: _.sample(articleCategories),
-  }),
+        ],
+      },
+      publishedAt: faker.date.past(),
+      categoryId: selectedCategory?.id,
+      category: selectedCategory,
+    };
+  },
 );

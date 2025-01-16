@@ -3,8 +3,6 @@ import { DeepPartial } from 'typeorm';
 import * as _ from 'lodash';
 
 import { PublisherEntity } from '../../../publishers/entities/publisher.entity';
-
-import { articles } from './articles';
 import { users } from './users';
 
 export const publishers: Omit<DeepPartial<PublisherEntity>, 'createdAt' | 'updatedAt' | 'deletedAt'>[] = _.times(
@@ -18,9 +16,5 @@ export const publishers: Omit<DeepPartial<PublisherEntity>, 'createdAt' | 'updat
       size: faker.number.float(),
       name: faker.string.alpha({ casing: 'lower', length: 10 }),
     },
-    articles: articles.map((article) => ({
-      ...article,
-      publisherId: faker.string.uuid(),
-    })),
   }),
 );
