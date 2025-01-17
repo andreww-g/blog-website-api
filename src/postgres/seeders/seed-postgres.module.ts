@@ -8,7 +8,6 @@ import { PublisherEntity } from '../../publishers/entities/publisher.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 import { DatabasePostgresModule } from '../database-postgres.module';
 import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-contact-info.entity';
-
 import { SeedPostgresService } from './seed-postgres.service';
 import { SeedCommand } from './seed.command';
 
@@ -25,5 +24,6 @@ import { SeedCommand } from './seed.command';
     ]),
   ],
   providers: [SeedPostgresService, SeedCommand],
+  exports: [SeedPostgresService],
 })
 export class SeedPostgresModule {}

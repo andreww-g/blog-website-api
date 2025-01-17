@@ -4,12 +4,14 @@ import { DeepPartial } from 'typeorm';
 
 import { ArticleEntity } from '../../../article/entities/article.entity';
 import { articleCategories } from './article-categories';
+import { publishers } from './publishers';
 
 export const articles: Omit<DeepPartial<ArticleEntity>, 'createdAt' | 'updatedAt' | 'deletedAt'>[] = _.times(
   50,
   () => {
     const title = faker.lorem.sentence();
     const selectedCategory = _.sample(articleCategories);
+    const selectedPublisher = _.sample(publishers);
     
     return {
       id: faker.string.uuid(),
@@ -35,6 +37,8 @@ export const articles: Omit<DeepPartial<ArticleEntity>, 'createdAt' | 'updatedAt
       publishedAt: faker.date.past(),
       categoryId: selectedCategory?.id,
       category: selectedCategory,
+      publisherId: selectedPublisher?.id,
+      publisher: selectedPublisher
     };
   },
 );

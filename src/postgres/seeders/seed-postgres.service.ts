@@ -8,10 +8,11 @@ import { ArticleCategoryEntity } from '../../article-category/entities/article-c
 import { PublisherEntity } from '../../publishers/entities/publisher.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-contact-info.entity';
+import { FileEntity } from '../../file/entities/file.entity';
 
 import { articleCategories } from './data/article-categories';
 import { articles } from './data/articles';
-import { publishers } from './data/publishers';
+import { publisherAvatars, publishers } from './data/publishers';
 import { users } from './data/users';
 
 @Injectable()
@@ -26,6 +27,7 @@ export class SeedPostgresService {
     private readonly articleCategoryEntityRepository: Repository<ArticleCategoryEntity>,
     @InjectRepository(PublisherContactInfoEntity)
     private readonly publisherContactInfoEntityRepository: Repository<PublisherContactInfoEntity>,
+    @InjectRepository(FileEntity) private readonly fileEntityRepository: Repository<FileEntity>,
   ) {}
 
   async refreshDB() {
@@ -33,8 +35,6 @@ export class SeedPostgresService {
       this.logger.log('Starting database refresh...');
 
       await this.clearTables();
-
-      // Seed in correct order to maintain referential integrity
       await this.seedUsers();
       await this.seedArticleCategories();
       await this.seedPublishersWithRelations();
@@ -50,11 +50,11 @@ export class SeedPostgresService {
   private async clearTables() {
     this.logger.log('Clearing existing data...');
 
-    // Clear in reverse order of dependencies
-    await Promise.all([this.articleEntityRepository.delete({}), this.publisherContactInfoEntityRepository.delete({})]);
-
-    await Promise.all([this.publisherEntityRepository.delete({}), this.articleCategoryEntityRepository.delete({})]);
-
+    await this.articleEntityRepository.delete({});
+    await this.publisherContactInfoEntityRepository.delete({});
+    await this.publisherEntityRepository.delete({});
+    await this.articleCategoryEntityRepository.delete({});
+    await this.fileEntityRepository.delete({});
     await this.userEntityRepository.delete({});
   }
 
@@ -70,6 +70,9 @@ export class SeedPostgresService {
 
   private async seedPublishersWithRelations() {
     try {
+      this.logger.log('Seeding publisher avatars...');
+      await this.fileEntityRepository.save(publisherAvatars);
+
       this.logger.log(`Seeding ${publishers.length} publishers...`);
       const savedPublishers = await this.publisherEntityRepository.save(publishers);
 
@@ -80,11 +83,10 @@ export class SeedPostgresService {
           instagram: `https://instagram.com/${faker.internet.username()}`,
           facebook: `https://facebook.com/${faker.internet.username()}`,
           telegram: `https://t.me/${faker.internet.username()}`,
-          publisherId: publisher.id,
-          publisher,
+          publisher: { id: publisher.id },
         };
 
-        return this.publisherContactInfoEntityRepository.insert(contactInfo);
+        return this.publisherContactInfoEntityRepository.save(contactInfo);
       });
 
       await Promise.all(contactInfoPromises);
@@ -107,7 +109,13 @@ export class SeedPostgresService {
   private async seedArticlesWithRelations() {
     try {
       this.logger.log(`Seeding ${articles.length} articles...`);
-      await this.articleEntityRepository.insert(articles);
+
+      const articleImages = articles.map((a) => a.image);
+      await this.fileEntityRepository.save(articleImages);
+
+      await this.articleEntityRepository.save(articles);
+
+      this.logger.log('Articles seeded successfully');
     } catch (error) {
       this.logger.error(`Failed to seed articles: ${error.message}`);
       throw error;

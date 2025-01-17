@@ -37,7 +37,7 @@ export class AuthService {
 
       if (decoded.type !== 'refresh') throw new Error('You must provide refresh token. Access token was provided.');
 
-      const user = await this.userService.findOneById(decoded.authorId);
+      const user = await this.userService.findOneById(decoded.userId);
 
       return this.generateTokenPairAuthor(user);
     });

@@ -8,7 +8,11 @@ import { PublisherContactInfoEntity } from './publisher-contact-info.entity';
 
 @Entity()
 export class PublisherEntity extends DefaultEntity {
+  @Column('uuid')
+  avatarId: string | null;
+
   @OneToOne(() => FileEntity, { nullable: true })
+  @JoinColumn()
   avatar: FileEntity | null;
 
   @OneToOne(() => PublisherContactInfoEntity, (contactInfo) => contactInfo.publisher, { cascade: true })
@@ -18,7 +22,7 @@ export class PublisherEntity extends DefaultEntity {
   userId: string;
 
   @OneToOne(() => UserEntity)
-  @JoinColumn()
+  @JoinColumn({ name: 'userId' })
   user: UserEntity;
 
   @OneToMany(() => ArticleEntity, (article) => article.publisher)

@@ -113,6 +113,7 @@ export class ArticlesService {
           .leftJoinAndSelect('article.category', 'category')
           .leftJoinAndSelect('article.publisher', 'publisher')
           .leftJoinAndSelect('publisher.user', 'user')
+          .leftJoinAndSelect('publisher.avatar', 'avatar')
           .andWhere('article.id != :id', { id })
           .andWhere('article.publishedAt IS NOT NULL')
           .andWhere('category.id = :categoryId', { categoryId: article.categoryId })

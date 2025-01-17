@@ -26,10 +26,14 @@ export class PublisherService {
   }
 
   async findOneById(id: string): Promise<PublisherEntity> {
-    const publisher = await this.publisherRepository.findOne({
-      where: { id },
-      relations: ['user', 'articles', 'contactInfo'],
-    });
+    const publisher = await this.publisherRepository
+      .createQueryBuilder('publisher')
+      .leftJoinAndSelect('publisher.avatar', 'avatar')
+      .leftJoinAndSelect('publisher.contactInfo', 'contactInfo')
+      .leftJoinAndSelect('publisher.user', 'user')
+      .leftJoinAndSelect('publisher.articles', 'articles')
+      .where('publisher.id = :id', { id })
+      .getOne();
 
     if (!publisher) {
       throw new NotFoundException(`Publisher with id ${id} not found`);
@@ -49,6 +53,7 @@ export class PublisherService {
 
     const queryBuilder = this.publisherRepository
       .createQueryBuilder('publisher')
+      .leftJoinAndSelect('publisher.avatar', 'avatar')
       .leftJoinAndSelect('publisher.user', 'user')
       .leftJoinAndSelect('publisher.articles', 'articles');
 
