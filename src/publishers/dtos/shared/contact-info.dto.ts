@@ -2,10 +2,7 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
 export const publisherContactInfoSchema = z.object({
-  id: z.string().uuid(),
-  telegram: z.string().nullish(),
-  facebook: z.string().nullish(),
-  instagram: z.string().nullish(),
+  telegram: z.string().url().nullish(),
+  facebook: z.string().url().nullish(),
+  instagram: z.string().url().nullish(),
 });
-
-export class ContactInfoDto extends createZodDto(publisherContactInfoSchema) {}

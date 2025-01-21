@@ -1,6 +1,5 @@
 import { AppController } from './app.controller';
 import { ArticlesModule } from './article/articles.module';
-import { ArticleCategoryModule } from './article-category/article-category.module';
 import { AuthModule } from './auth/auth.module';
 import { FileModule } from './file/file.module';
 import { DatabasePostgresModule } from './postgres/database-postgres.module';
@@ -17,7 +16,6 @@ import { SeedPostgresModule } from './postgres/seeders/seed-postgres.module';
     ReviewsModule,
     FileModule,
     ArticlesModule,
-    ArticleCategoryModule,
     DatabasePostgresModule,
     SeedPostgresModule,
   ],

@@ -9,6 +9,9 @@ import { AuthService } from './auth.service';
 import { JwtUserStrategy } from './strategies/jwt-user.strategy';
 import { LocalUserStrategy } from './strategies/local-user.strategy';
 import { UserModule } from '../user/user.module';
+import { AuthValidateService } from './auth-validate.service';
+import { APP_GUARD, Reflector } from '@nestjs/core';
+import { AuthRoleGuard } from './guards/auth-global.guard';
 
 @Module({
   imports: [
@@ -19,7 +22,17 @@ import { UserModule } from '../user/user.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtUserStrategy, LocalUserStrategy],
+  providers: [
+    AuthService,
+    JwtUserStrategy,
+    LocalUserStrategy,
+    AuthValidateService,
+    {
+      provide: APP_GUARD,
+      useFactory: (reflector, authValidateService) => new AuthRoleGuard(reflector, authValidateService),
+      inject: [Reflector, AuthValidateService],
+    },
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

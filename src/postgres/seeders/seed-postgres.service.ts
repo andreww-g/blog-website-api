@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ArticleEntity } from '../../article/entities/article.entity';
-import { ArticleCategoryEntity } from '../../article-category/entities/article-category.entity';
+import { ArticleCategoryEntity } from '../../article/entities/article-category.entity';
 import { PublisherEntity } from '../../publishers/entities/publisher.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 import { PublisherContactInfoEntity } from '../../publishers/entities/publisher-contact-info.entity';

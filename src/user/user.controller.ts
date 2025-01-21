@@ -11,9 +11,6 @@ import { UserCreateRequestDto } from './dtos/request/user-create-request.dto';
 import { UserUpdateRequestDto } from './dtos/request/user-update-request.dto';
 import { UserResponseDto, userResponseSchema } from './dtos/response/user-response.dto';
 import { UserService } from './user.service';
-import { JwtAuthorGuard } from '../auth/guards/jwt-author.guard';
-import { AuthUser } from '../common/decorators/auth/auth-user.decorator';
-import { IAuthUser } from '../common/interfaces/auth/auth-user.interface';
 
 @ApiTags('Users')
 @Controller('users')
@@ -23,15 +20,6 @@ export class UserController {
   @Post()
   async create(@Body() payload: UserCreateRequestDto): Promise<ApiResponse<UserResponseDto>> {
     const data = await this.userService.create(payload);
-
-    return { success: true, data: plainToInstance(UserResponseDto, data) };
-  }
-
-  @Get('/auth-profile')
-  @UseGuards(JwtAuthorGuard)
-  @ApiZodResponse(userResponseSchema)
-  async findAuthProfile(@AuthUser() user: IAuthUser): Promise<ApiResponse<UserResponseDto>> {
-    const data = await this.userService.findOneById(user.userId);
 
     return { success: true, data: plainToInstance(UserResponseDto, data) };
   }

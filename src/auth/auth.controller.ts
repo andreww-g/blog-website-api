@@ -8,18 +8,17 @@ import { AuthService } from './auth.service';
 import { LoginPayloadDto } from './dtos/request/login-payload.dto';
 import { RefreshTokenDto, refreshTokenSchema } from './dtos/request/refresh-token.dto';
 import { JwtTokensDto, jwtTokensSchema } from './dtos/response/jwt-tokens.dto';
-import { LocalAuthorGuard } from './guards/local-author.guard';
-
+import { LocalUserGuard } from './guards/local-user.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor (private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @UseGuards(LocalAuthorGuard)
+  @UseGuards(LocalUserGuard)
   @ApiZodResponse(jwtTokensSchema)
   @Post('login')
-  async login (@Body() { email, password }: LoginPayloadDto): Promise<{ success: true, data: JwtTokensDto }> {
+  async login(@Body() { email, password }: LoginPayloadDto): Promise<{ success: true; data: JwtTokensDto }> {
     const data = await this.authService.loginUser({ email, password });
 
     return { success: true, data };
@@ -28,7 +27,7 @@ export class AuthController {
   @ApiZodResponse(jwtTokensSchema)
   @Post('refresh-token')
   @ApiBody({ schema: zodToOpenAPI(refreshTokenSchema) })
-  async refreshTokens (@Body() { refreshToken }: RefreshTokenDto): Promise<{ success: true, data: JwtTokensDto }> {
+  async refreshTokens(@Body() { refreshToken }: RefreshTokenDto): Promise<{ success: true; data: JwtTokensDto }> {
     const data = await this.authService.refreshAccessToken(refreshToken);
 
     return { success: true, data };

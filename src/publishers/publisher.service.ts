@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, DeepPartial, Repository } from 'typeorm';
 import { DEFAULT_TAKE } from '../common/utils/default-take';
 
 import { PublisherEntity } from './entities/publisher.entity';
 import { UserService } from '../user/user.service';
+import { merge } from 'lodash';
 
 @Injectable()
 export class PublisherService {
@@ -23,6 +24,53 @@ export class PublisherService {
     });
 
     return this.publisherRepository.save(publisher);
+  }
+
+  async update(id: string, data: DeepPartial<PublisherEntity>): Promise<PublisherEntity> {
+    const publisher = await this.publisherRepository
+      .createQueryBuilder('publisher')
+      .leftJoinAndSelect('publisher.user', 'user')
+      .leftJoinAndSelect('publisher.contactInfo', 'contactInfo')
+      .where('publisher.id = :id', { id })
+      .getOne();
+
+    console.log('Update Data:', data);
+
+    if (!publisher) {
+      throw new NotFoundException(`Publisher with id ${id} not found`);
+    }
+
+    if (data.user) {
+      await this.userService.update(publisher.user.id, data.user);
+    }
+
+    // Update contact info if provided
+    if (data.contactInfo) {
+      if (!publisher.contactInfo) {
+        publisher.contactInfo = this.publisherRepository.create().contactInfo;
+      }
+      const mergedPublisher = merge({}, publisher, { contactInfo: data.contactInfo });
+      await this.publisherRepository.save(mergedPublisher);
+    }
+
+    return this.findOneById(id);
+  }
+
+  async findOneByUserId(userId: string): Promise<PublisherEntity> {
+    const publisher = await this.publisherRepository
+      .createQueryBuilder('publisher')
+      .leftJoinAndSelect('publisher.avatar', 'avatar')
+      .leftJoinAndSelect('publisher.contactInfo', 'contactInfo')
+      .leftJoinAndSelect('publisher.user', 'user')
+      .leftJoinAndSelect('publisher.articles', 'articles')
+      .where('user.id = :userId', { userId })
+      .getOne();
+
+    if (!publisher) {
+      throw new NotFoundException(`Publisher with user id ${userId} not found`);
+    }
+
+    return publisher;
   }
 
   async findOneById(id: string): Promise<PublisherEntity> {

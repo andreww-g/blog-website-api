@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 
@@ -12,9 +12,14 @@ import { PublisherCreateRequestDto } from './dtos/request/publisher-create-reque
 import { PublisherParamsRequestDto } from './dtos/request/publisher-params-request.dto';
 import { PublisherResponseDto, publisherResponseSchema } from './dtos/response/publisher-response.dto';
 import { PublisherService } from './publisher.service';
+import { AuthUser } from '../common/decorators/auth/auth-user.decorator';
+import { IAuthUser } from '../common/interfaces/auth/auth-user.interface';
+import { AuthPublisher } from '../common/decorators/publisher/auth-publisher.decorator';
+import { UserResponseDto } from '../user/dtos/response/user-response.dto';
+import { PublisherUpdateRequestDto } from './dtos/request/publisher-update.dto';
 
 @ApiTags('Publishers')
-@Controller('/public/publishers')
+@Controller('/publishers')
 export class PublisherController {
   constructor(private readonly publisherService: PublisherService) {}
 
@@ -24,6 +29,26 @@ export class PublisherController {
     const data = await this.publisherService.create(payload.userId, payload.articleIds || []);
 
     return { success: true, data: plainToInstance(PublisherResponseDto, data) };
+  }
+
+  @Patch(':id')
+  @ApiZodResponse(publisherResponseSchema)
+  async update(
+    @Param('id') id: PublisherByIdRequestDto['id'],
+    @Body() payload: PublisherUpdateRequestDto,
+  ): Promise<ApiResponse<PublisherResponseDto>> {
+    const data = await this.publisherService.update(id, payload);
+    console.log(data);
+    return { success: true, data: plainToInstance(PublisherResponseDto, data) };
+  }
+
+  @Get('/auth-profile')
+  @AuthPublisher()
+  @ApiZodResponse(publisherResponseSchema)
+  async findAuthProfile(@AuthUser() user: IAuthUser): Promise<ApiResponse<PublisherResponseDto>> {
+    const data = await this.publisherService.findOneByUserId(user.id);
+
+    return { success: true, data: plainToInstance(UserResponseDto, data) };
   }
 
   @Get(':id')

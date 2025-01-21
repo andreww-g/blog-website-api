@@ -73,7 +73,7 @@ export class AuthService {
     const basePayload = {
       sub: user.id,
       email: user.email,
-      role: UserRoleEnum.CLIENT,
+      role: UserRoleEnum.PUBLISHER,
       type: type === 'access' ? AuthTokenTypeEnum.ACCESS : AuthTokenTypeEnum.REFRESH,
     };
 

@@ -1,1 +1,1 @@
-export const IS_CLIENT_AUTH = 'IS_CLIENT_AUTH';
+export const IS_PUBLISHER_AUTH = 'IS_PUBLISHER_AUTH';

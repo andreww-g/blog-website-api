@@ -15,6 +15,7 @@ import { ArticleQueryDto } from './dtos/request/article-query.dto';
 import { CreateArticleDto } from './dtos/request/create-article.dto';
 import { UpdateArticleDto } from './dtos/request/update-article.dto';
 import { ArticleResponseDto, articleResponseSchema } from './dtos/response/article-response.dto';
+import { AuthPublisher } from '../common/decorators/publisher/auth-publisher.decorator';
 
 @ApiTags('Articles')
 @Controller('articles')
@@ -22,6 +23,7 @@ export class ArticlesController {
   constructor(private readonly articleService: ArticlesService) {}
 
   @Post()
+  @AuthPublisher()
   @ApiZodResponse(articleResponseSchema)
   async createArticle(@Body() payload: CreateArticleDto): Promise<{ success: true; data: ArticleResponseDto }> {
     const article = await this.articleService.createArticle(payload);
@@ -31,6 +33,7 @@ export class ArticlesController {
 
   @Patch(':id')
   @ApiZodResponse(articleResponseSchema)
+  @AuthPublisher()
   async updateArticle(
     @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],
     @Body() payload: UpdateArticleDto,
@@ -41,6 +44,7 @@ export class ArticlesController {
   }
 
   @Delete(':id')
+  @AuthPublisher()
   @ApiZodResponse(articleResponseSchema)
   async deleteArticle(@Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id']): Promise<{ success: true }> {
     await this.articleService.deleteArticle(id);
@@ -49,6 +53,7 @@ export class ArticlesController {
   }
 
   @Post(':id/publish')
+  @AuthPublisher()
   @ApiZodEmptyResponse()
   async publishArticle(
     @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],
@@ -59,6 +64,7 @@ export class ArticlesController {
   }
 
   @Post(':id/unpublish')
+  @AuthPublisher()
   @ApiZodResponse(articleResponseSchema)
   async unpublishArticle(
     @Param('id', ParseUUIDPipe) id: ArticleByIdRequestDto['id'],

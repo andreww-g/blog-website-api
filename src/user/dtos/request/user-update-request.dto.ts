@@ -7,14 +7,6 @@ export const updateUserSchema = z.object({
   password: z.string().optional(),
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
-  avatar: z
-    .object({
-      url: z.string().url().optional(),
-      name: z.string().optional(),
-      mimeType: z.string().nullish(),
-      size: z.number().nullish(),
-    })
-    .optional(),
 });
 
 export class UserUpdateRequestDto extends createZodDto(updateUserSchema) {}

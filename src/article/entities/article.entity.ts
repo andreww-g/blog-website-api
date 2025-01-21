@@ -1,17 +1,9 @@
-import {
-  Column,
-  Entity,
-  Index,
-  ManyToOne,
-  ObjectLiteral,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, Index, ManyToOne, ObjectLiteral, OneToOne } from 'typeorm';
 
-import { ArticleCategoryEntity } from '../../article-category/entities/article-category.entity';
+import { ArticleCategoryEntity } from './article-category.entity';
 import { FileEntity } from '../../file/entities/file.entity';
 import { DefaultEntity } from '../../postgres/entities/default.entity';
 import { PublisherEntity } from '../../publishers/entities/publisher.entity';
-
 
 @Entity()
 export class ArticleEntity extends DefaultEntity {

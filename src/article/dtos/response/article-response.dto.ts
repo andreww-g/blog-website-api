@@ -1,6 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
-import { articleCategorySchema } from '../../../article-category/dtos/shared/article-category-request.dto';
+import { articleCategorySchema } from '../request/article-category-request.dto';
 import { publisherResponseSchema } from '../../../publishers/dtos/response/publisher-response.dto';
 
 export const articleResponseSchema = z.object({
