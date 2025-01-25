@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 import { SortOrderEnum } from '../common/enums/sort-order.enum';
 
 import { ArticleEntity } from './entities/article.entity';
+import { PublisherService } from '../publishers/publisher.service';
 
 @Injectable()
 export class ArticlesService {
@@ -15,10 +16,15 @@ export class ArticlesService {
   constructor(
     @InjectRepository(ArticleEntity)
     private readonly articleRepository: Repository<ArticleEntity>,
+    private readonly publisherService: PublisherService,
   ) {}
 
-  async createArticle(data: DeepPartial<ArticleEntity>): Promise<ArticleEntity> {
-    const article = await this.articleRepository.save(data);
+  async createArticle(data: DeepPartial<ArticleEntity>, publisherId: string): Promise<ArticleEntity> {
+    const publisher = await this.publisherService.findOneById(publisherId);
+    const article = await this.articleRepository.save({
+      publisher,
+      ...data,
+    });
 
     return this.findOneById(article.id);
   }

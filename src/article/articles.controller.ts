@@ -16,6 +16,8 @@ import { CreateArticleDto } from './dtos/request/create-article.dto';
 import { UpdateArticleDto } from './dtos/request/update-article.dto';
 import { ArticleResponseDto, articleResponseSchema } from './dtos/response/article-response.dto';
 import { AuthPublisher } from '../common/decorators/publisher/auth-publisher.decorator';
+import { IAuthUser } from '../common/interfaces/auth/auth-user.interface';
+import { AuthUser } from '../common/decorators/auth/auth-user.decorator';
 
 @ApiTags('Articles')
 @Controller('articles')
@@ -25,8 +27,11 @@ export class ArticlesController {
   @Post()
   @AuthPublisher()
   @ApiZodResponse(articleResponseSchema)
-  async createArticle(@Body() payload: CreateArticleDto): Promise<{ success: true; data: ArticleResponseDto }> {
-    const article = await this.articleService.createArticle(payload);
+  async createArticle(
+    @Body() payload: CreateArticleDto,
+    @AuthUser() publisher: IAuthUser,
+  ): Promise<{ success: true; data: ArticleResponseDto }> {
+    const article = await this.articleService.createArticle(payload, publisher.id);
 
     return { success: true, data: plainToInstance(CreateArticleDto, article) };
   }

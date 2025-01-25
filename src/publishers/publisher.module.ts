@@ -11,5 +11,6 @@ import { UserModule } from '../user/user.module';
   imports: [TypeOrmModule.forFeature([PublisherEntity, PublisherContactInfoEntity]), UserModule],
   controllers: [PublisherController],
   providers: [PublisherService],
+  exports: [PublisherService],
 })
 export class PublisherModule {}

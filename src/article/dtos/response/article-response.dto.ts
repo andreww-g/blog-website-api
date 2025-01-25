@@ -13,7 +13,6 @@ export const articleResponseSchema = z.object({
   publisher: z.lazy(() => publisherResponseSchema),
   slug: z.string(),
   tags: z.array(z.string()),
-  image: z.string(),
   category: articleCategorySchema,
   isPublished: z.boolean(),
   publishedAt: z.date().nullable(),

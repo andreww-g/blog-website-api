@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { zodToOpenAPI } from 'nestjs-zod';
 
@@ -8,14 +8,12 @@ import { AuthService } from './auth.service';
 import { LoginPayloadDto } from './dtos/request/login-payload.dto';
 import { RefreshTokenDto, refreshTokenSchema } from './dtos/request/refresh-token.dto';
 import { JwtTokensDto, jwtTokensSchema } from './dtos/response/jwt-tokens.dto';
-import { LocalUserGuard } from './guards/local-user.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @UseGuards(LocalUserGuard)
   @ApiZodResponse(jwtTokensSchema)
   @Post('login')
   async login(@Body() { email, password }: LoginPayloadDto): Promise<{ success: true; data: JwtTokensDto }> {

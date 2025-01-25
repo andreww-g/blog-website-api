@@ -15,15 +15,19 @@ export class PublisherService {
     private readonly userService: UserService,
   ) {}
 
-  async create(userId: string, articleIds: string[]) {
-    const user = await this.userService.findOneById(userId);
+  async create(data: DeepPartial<PublisherEntity>) {
+    const user = await this.userService.create(data.user);
 
     const publisher = this.publisherRepository.create({
+      ...data,
+      userId: user.id,
       user,
-      articles: articleIds.map((id) => ({ id })),
+      contactInfo: data.contactInfo || {},
     });
 
-    return this.publisherRepository.save(publisher);
+    const savedPublisher = await this.publisherRepository.save(publisher);
+
+    return this.findOneById(savedPublisher.id);
   }
 
   async update(id: string, data: DeepPartial<PublisherEntity>): Promise<PublisherEntity> {
@@ -34,8 +38,6 @@ export class PublisherService {
       .where('publisher.id = :id', { id })
       .getOne();
 
-    console.log('Update Data:', data);
-
     if (!publisher) {
       throw new NotFoundException(`Publisher with id ${id} not found`);
     }
@@ -44,7 +46,6 @@ export class PublisherService {
       await this.userService.update(publisher.user.id, data.user);
     }
 
-    // Update contact info if provided
     if (data.contactInfo) {
       if (!publisher.contactInfo) {
         publisher.contactInfo = this.publisherRepository.create().contactInfo;

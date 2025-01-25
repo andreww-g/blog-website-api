@@ -26,7 +26,7 @@ export class PublisherController {
   @Post()
   @ApiZodResponse(publisherResponseSchema)
   async create(@Body() payload: PublisherCreateRequestDto): Promise<ApiResponse<PublisherResponseDto>> {
-    const data = await this.publisherService.create(payload.userId, payload.articleIds || []);
+    const data = await this.publisherService.create(payload);
 
     return { success: true, data: plainToInstance(PublisherResponseDto, data) };
   }
@@ -38,7 +38,7 @@ export class PublisherController {
     @Body() payload: PublisherUpdateRequestDto,
   ): Promise<ApiResponse<PublisherResponseDto>> {
     const data = await this.publisherService.update(id, payload);
-    console.log(data);
+
     return { success: true, data: plainToInstance(PublisherResponseDto, data) };
   }
 
