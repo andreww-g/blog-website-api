@@ -1,0 +1,84 @@
+services:
+  postgres-container:
+    image: postgres
+    restart: unless-stopped
+    ports:
+      - '5432:${POSTGRES_PORT}'
+    volumes:
+      - .postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    env_file:
+      - .env
+    networks:
+      - app-network
+  redis-container:
+    image: redis
+    restart: unless-stopped
+    ports:
+      - '6379:${REDIS_PORT}'
+    volumes:
+      - .redis:/data
+    environment:
+      REDIS_PORT: ${REDIS_PORT}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    env_file:
+      - .env
+    networks:
+      - app-network
+  datadog-agent:
+    image: datadog/agent:latest
+    restart: always
+    ports:
+      - "8126:8126"
+    networks:
+      - app-network
+    volumes:
+      # For the Agent in general
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      # For Live Processes in particular
+      - /etc/passwd:/etc/passwd:ro
+    environment:
+      DD_API_KEY: ${DD_API_KEY}
+      DD_SITE: 'us5.datadoghq.com'
+      # Allow DogStatsD to receive metrics from other containers
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: "true"
+      # Enable APM and allow other containers to report
+      DD_APM_ENABLED: "true"
+      DD_APM_NON_LOCAL_TRAFFIC: "true"
+      # Enable the Process Agent
+      DD_PROCESS_AGENT_ENABLED: "true"
+      # Enable Logs
+      DD_LOGS_ENABLED: "true"
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+      DD_AC_EXCLUDE: "name:datadog-agent"  # exclude Agent logs
+      # Add hostname configuration
+      DD_HOSTNAME: "blog-website"
+      # Enable container collection
+      DD_CONTAINER_EXCLUDE: ""
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "datadog-agent", "service": "datadog-agent"}]'
+    env_file:
+      - .env
+
+networks:
+  app-network:
+    driver: bridge
+
+
+
