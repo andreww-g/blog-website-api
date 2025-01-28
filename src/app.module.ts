@@ -8,8 +8,6 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { Module } from '@nestjs/common';
 import { SeedCommand } from './postgres/seeders/seed.command';
 import { SeedPostgresModule } from './postgres/seeders/seed-postgres.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigService } from './config/config.service';
 
 @Module({
   imports: [
@@ -20,15 +18,6 @@ import { ConfigService } from './config/config.service';
     ArticlesModule,
     DatabasePostgresModule,
     SeedPostgresModule,
-    TypeOrmModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        ...configService.typeormConfig,
-        autoLoadEntities: true,
-        synchronize: process.env.NODE_ENV !== 'production',
-      }),
-      inject: [ConfigService],
-    }),
   ],
   providers: [SeedCommand],
   controllers: [AppController],
